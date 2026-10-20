@@ -1,0 +1,10 @@
+name: external-login-isolation
+description: 첨부 기능 검증용 예제이며 실제 Hangari 실행 결과가 아닙니다.
+load:
+  concurrent_requests: 70
+external_dependency:
+  delay_ms: 10000
+assertions:
+  login_max_ms: 3000
+  contents_success_rate: 1.0
+  search_success_rate: 1.0

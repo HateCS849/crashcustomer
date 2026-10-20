@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: Sample Shop API
+  version: 1.0.0
+paths:
+  /api/{variant}/orders:
+    post:
+      summary: 원두 정기배송 주문 생성 (결제 대행사 호출 포함)
+      parameters:
+        - name: variant
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, quantity]
+              properties:
+                name: {type: string}
+                email: {type: string}
+                quantity: {type: integer, minimum: 1, maximum: 10}
+      responses:
+        "201": {description: 주문 완료}
+        "503": {description: 결제 대행사 일시 장애}
+  /api/{variant}/stock:
+    get:
+      summary: 남은 원두 수량 조회 (화면 진입 시 호출, 재고 DB 잠금 사용)
+      parameters:
+        - name: variant
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200": {description: 재고 수량}
+  /api/orders/count:
+    get:
+      summary: 누적 주문 수
+      responses:
+        "200": {description: 주문 수}

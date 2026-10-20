@@ -1,0 +1,43 @@
+openapi: 3.0.1
+info:
+  title: Sample Food API
+  version: 1.0.0
+security:
+  - BearerAuth: []
+paths:
+  /api/v1/auth/social-login:
+    post:
+      summary: 소셜 로그인
+      security: []
+      parameters:
+        - name: Device-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 로그인 응답
+  /api/v1/contents:
+    get:
+      summary: 콘텐츠 목록
+      responses:
+        '200':
+          description: 목록 응답
+  /api/v1/search:
+    get:
+      summary: 음식 검색
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 검색 응답
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

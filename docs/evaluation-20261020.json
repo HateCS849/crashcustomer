@@ -1,0 +1,241 @@
+{
+  "date": "2026-10-20",
+  "model": "qwen3:8b",
+  "scope": "내장 합성 신청 폼. 정상 1개와 개별 결함 3개, 각 1회 실행. 일반화 성능 아님.",
+  "measurements": {
+    "rule": {
+      "backend": "rule",
+      "runs": 4,
+      "passed": 4,
+      "defect_recall": 1.0,
+      "reproduction_rate": 1.0,
+      "false_positives": 0,
+      "execution_errors": 0,
+      "results": [
+        {
+          "repeat": 1,
+          "fault": "healthy",
+          "run_id": "587b8fa836b94201a699a5bef81b2e44",
+          "passed": true,
+          "expected": [],
+          "found": [],
+          "verified": [],
+          "status": "completed",
+          "error": null,
+          "seconds": 3.0,
+          "actions": 5
+        },
+        {
+          "repeat": 1,
+          "fault": "reset",
+          "run_id": "4d86149d92c542a28d96cdef8f7f009a",
+          "passed": true,
+          "expected": [
+            "input_loss"
+          ],
+          "found": [
+            "input_loss"
+          ],
+          "verified": [
+            "input_loss"
+          ],
+          "status": "completed",
+          "error": null,
+          "seconds": 1.85,
+          "actions": 4
+        },
+        {
+          "repeat": 1,
+          "fault": "locked",
+          "run_id": "96a1deca67cc429ea6207221dd724195",
+          "passed": true,
+          "expected": [
+            "retry_locked"
+          ],
+          "found": [
+            "retry_locked"
+          ],
+          "verified": [
+            "retry_locked"
+          ],
+          "status": "completed",
+          "error": null,
+          "seconds": 2.8,
+          "actions": 4
+        },
+        {
+          "repeat": 1,
+          "fault": "false_success",
+          "run_id": "3dffeab6e28b40628e99b44647dc68e6",
+          "passed": true,
+          "expected": [
+            "false_success"
+          ],
+          "found": [
+            "false_success"
+          ],
+          "verified": [
+            "false_success"
+          ],
+          "status": "completed",
+          "error": null,
+          "seconds": 1.77,
+          "actions": 4
+        }
+      ],
+      "scope": "Controlled synthetic form, fixed transient-failure scenario; not real-world generalization."
+    },
+    "ollama_before_guard": {
+      "backend": "ollama",
+      "runs": 4,
+      "passed": 0,
+      "defect_recall": 0.0,
+      "reproduction_rate": null,
+      "false_positives": 0,
+      "execution_errors": 4,
+      "results": [
+        {
+          "repeat": 1,
+          "fault": "healthy",
+          "run_id": "dd1c4b657b5f43dab2270ffc55f43deb",
+          "passed": false,
+          "expected": [],
+          "found": [],
+          "verified": [],
+          "status": "error",
+          "error": "ValueError: 관찰된 사용 가능한 컨트롤 하나를 정확히 지정해야 합니다: ",
+          "seconds": 22.0,
+          "actions": 1
+        },
+        {
+          "repeat": 1,
+          "fault": "reset",
+          "run_id": "b13d92af193f46a3b6dd4d1bb42676ff",
+          "passed": false,
+          "expected": [
+            "input_loss"
+          ],
+          "found": [],
+          "verified": [],
+          "status": "error",
+          "error": "ValueError: 관찰된 사용 가능한 컨트롤 하나를 정확히 지정해야 합니다: ",
+          "seconds": 16.86,
+          "actions": 1
+        },
+        {
+          "repeat": 1,
+          "fault": "locked",
+          "run_id": "64103e0b46a644e6a4a91e9699f56303",
+          "passed": false,
+          "expected": [
+            "retry_locked"
+          ],
+          "found": [],
+          "verified": [],
+          "status": "error",
+          "error": "ValueError: 관찰된 사용 가능한 컨트롤 하나를 정확히 지정해야 합니다: ",
+          "seconds": 15.79,
+          "actions": 1
+        },
+        {
+          "repeat": 1,
+          "fault": "false_success",
+          "run_id": "cb070f641501413a894b88d06a2f3e8d",
+          "passed": false,
+          "expected": [
+            "false_success"
+          ],
+          "found": [],
+          "verified": [],
+          "status": "error",
+          "error": "ValueError: 관찰된 사용 가능한 컨트롤 하나를 정확히 지정해야 합니다: ",
+          "seconds": 15.68,
+          "actions": 1
+        }
+      ],
+      "scope": "Controlled synthetic form, fixed transient-failure scenario; not real-world generalization."
+    },
+    "ollama_after_guard": {
+      "backend": "ollama",
+      "runs": 4,
+      "passed": 4,
+      "defect_recall": 1.0,
+      "reproduction_rate": 1.0,
+      "false_positives": 0,
+      "execution_errors": 0,
+      "results": [
+        {
+          "repeat": 1,
+          "fault": "healthy",
+          "run_id": "fe663c8fe455454f97f1af5cc6d1c1e1",
+          "passed": true,
+          "expected": [],
+          "found": [],
+          "verified": [],
+          "status": "completed",
+          "error": null,
+          "seconds": 14.91,
+          "actions": 5
+        },
+        {
+          "repeat": 1,
+          "fault": "reset",
+          "run_id": "431b3297c1ae4a049aad364d5d8aca5e",
+          "passed": true,
+          "expected": [
+            "input_loss"
+          ],
+          "found": [
+            "input_loss"
+          ],
+          "verified": [
+            "input_loss"
+          ],
+          "status": "completed",
+          "error": null,
+          "seconds": 13.32,
+          "actions": 4
+        },
+        {
+          "repeat": 1,
+          "fault": "locked",
+          "run_id": "326f27c9834b46349e50465a5add3c2d",
+          "passed": true,
+          "expected": [
+            "retry_locked"
+          ],
+          "found": [
+            "retry_locked"
+          ],
+          "verified": [
+            "retry_locked"
+          ],
+          "status": "completed",
+          "error": null,
+          "seconds": 12.67,
+          "actions": 4
+        },
+        {
+          "repeat": 1,
+          "fault": "false_success",
+          "run_id": "6f1283f2a6454522a8a5c5525182212e",
+          "passed": true,
+          "expected": [
+            "false_success"
+          ],
+          "found": [
+            "false_success"
+          ],
+          "verified": [
+            "false_success"
+          ],
+          "status": "completed",
+          "error": null,
+          "seconds": 12.33,
+          "actions": 4
+        }
+      ],
+      "scope": "Controlled synthetic form, fixed transient-failure scenario; not real-world generalization."
+    }
+  }
+}

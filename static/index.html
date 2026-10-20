@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CrashCustomer — Browser testing lab</title><link rel="stylesheet" href="/static/styles.css"><link rel="stylesheet" href="/static/projects.css"><link rel="stylesheet" href="/static/lab.css"><script defer src="/static/app.js"></script><script defer src="/static/lab.js"></script><script defer src="/static/campaign.js"></script><script defer src="/static/projects.js"></script></head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="/"><span class="brand-symbol">↯</span>CrashCustomer<span class="version">BETA</span></a>
+  <div class="workspace-label">YOUR WORKSPACE</div>
+  <div class="nav-active"><span>▧</span> 브라우저 테스트실 <span class="nav-dot"></span></div>
+  <div class="sidebar-section"><span>최근 실행</span><span id="history-count">0</span></div>
+  <div id="history" class="history"><p class="history-empty">첫 테스트를 시작하면<br>실행 기록이 여기에 쌓입니다.</p></div>
+  <div class="sidebar-footer"><span class="live-dot"></span> 로컬 테스트 환경<div>독립된 브라우저 · 격리된 테스트 데이터</div></div>
+</aside>
+<main>
+  <header class="topbar"><span>Workspace <span class="slash">/</span> <strong>테스트실</strong></span><div class="topbar-right"><span class="status-pill"><i></i> LOCAL</span><a href="/docs" target="_blank" rel="noopener">API 문서 ↗</a></div></header>
+  <section class="page-heading"><div><div class="eyebrow">LET YOUR NEXT BUG BE THE LAST SURPRISE.</div><h1>고객이 겪기 전에,<br>실패를 먼저 만나보세요<span>.</span></h1><p>목표를 주면 브라우저를 탐색하고, 실패를 다시 재현해 증거로 남깁니다.</p></div><div class="heading-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span>↯</span><small>OBSERVE<br>ACT · VERIFY</small></div></section>
+  <section class="project-switcher" aria-label="프로젝트 선택"><div><label for="project-select">검증할 프로젝트</label><select id="project-select"><option value="">내장 데모 · 행사 신청</option></select></div><button id="new-project-button" type="button">＋ 프로젝트 등록</button></section>
+  <section id="project-workspace" hidden aria-label="프로젝트 자료">
+    <div class="project-intro"><div><div class="eyebrow">PROJECT LIBRARY</div><h2 id="project-name"></h2><p id="project-description"></p><div id="project-addresses" class="project-addresses"></div></div><button id="edit-project-button" type="button" class="small-button">정보 수정</button></div>
+    <div class="connection-note" id="connection-note"><span>◌</span><div><strong id="connection-title">실행 연결 상태를 확인하고 있습니다.</strong><p id="connection-message"></p></div><button type="button" id="check-connection" class="small-button">연결 확인</button><span class="connection-badge" id="connection-badge">확인 중</span></div>
+    <div class="campaign-grid">
+      <section class="panel"><div class="panel-heading"><h2><span class="section-num">01</span> 배포 전 장애 사전 점검</h2><span class="mini-badge">FAULT INJECTION</span></div>
+        <form id="campaign-form" class="lab-form">
+          <p class="field-note lab-intro">장애 없이 목표 경로를 한 번 수행해 화면이 호출하는 API를 찾고, 서버 오류(503·500)·인증 만료(401)·요청 제한(429)·연결 끊김·지연·응답 형식 변경·연속 실패·중복 클릭·느린 네트워크·화면 파일 실패를 주입해 같은 경로를 다시 수행합니다. 첨부 자료는 시나리오 선정 근거로만 사용합니다.</p>
+          <label class="field-label" for="campaign-goal">사용자 목표</label><textarea id="campaign-goal" rows="3" minlength="5" maxlength="1500" required>화면의 주요 입력 양식을 작성해 제출하고 결과를 확인해줘.</textarea>
+          <label class="field-label spaced" for="campaign-backend">실행 방식</label><select id="campaign-backend"><option value="rule">규칙 기반 · 기준선 (AI 아님)</option><option value="ollama">Ollama AI · 계획·탐색 에이전트</option></select>
+          <label class="field-label spaced" for="campaign-max">장애 시나리오 수 <span>유형별 1개씩 우선</span></label><select id="campaign-max"><option>4</option><option>8</option><option selected>11</option><option>16</option></select>
+          <div class="check-options"><label><input type="checkbox" id="campaign-api" checked> API 입력 검증 <small>잘못된 요청 본문에 5xx가 나는지</small></label><label><input type="checkbox" id="campaign-load" checked> 단계별 부하 측정 <small>조회 API·화면 주소, GET만</small></label></div>
+          <label class="field-label spaced" for="campaign-users">최대 동시 사용자 <span>P95 목표 1초</span></label><select id="campaign-users"><option>10</option><option selected>20</option><option>50</option></select>
+          <div id="campaign-error" class="form-error" role="alert" hidden></div>
+          <button id="campaign-start" class="primary-button" type="submit"><span>사전 점검 시작하기</span><span>↗</span></button>
+        </form>
+        <div id="campaign-history" class="lab-history"></div>
+      </section>
+      <div class="results-column">
+        <section class="panel"><div class="panel-heading"><h2><span class="section-num">02</span> 장애 시나리오 결과 <span id="campaign-finding-count" class="count-badge">0</span></h2><span class="lab-report-links"><span id="campaign-state" class="run-state">대기 중</span><a id="campaign-report" class="download-link" hidden>보고서 ↓</a></span></div><div id="campaign-summary"></div><div id="campaign-scenarios"><div class="compact-empty"><span>⌁</span><p>사전 점검을 시작하면 시나리오별 결함과 재현 결과를 표시합니다.<small>로컬·허용 호스트에서만 실행하며, 같은 출처 API에만 장애를 주입합니다.</small></p></div></div></section>
+        <section class="panel"><div class="panel-heading"><h2><span class="section-num">03</span> API 입력 검증 · 단계별 부하</h2><span class="mini-badge">HTTP PROBE</span></div><div id="campaign-probes"><div class="compact-empty"><p>장애 시나리오가 끝난 뒤 관찰된 요청으로 측정합니다.</p></div></div></section>
+        <section class="panel"><div class="panel-heading"><h2><span class="section-num">04</span> 계획 근거 · 첨부 자료 검색</h2><span class="mini-badge">RAG</span></div><div id="campaign-references"><div class="compact-empty"><p>점검을 실행하면 계획 에이전트가 참고한 첨부 자료 조각을 표시합니다.</p></div></div></section>
+        <section class="panel timeline-panel"><div class="panel-heading"><h2><span class="section-num">05</span> 에이전트 타임라인</h2><span id="campaign-elapsed" class="muted">실제 실행 기록</span></div><ol id="campaign-timeline" class="timeline"><li class="timeline-placeholder">탐색 → 검색 → 계획 → 장애 주입 → API 측정 → 요약 순서로 진행합니다.</li></ol></section>
+      </div>
+    </div>
+    <div class="project-grid"><div class="project-files-column">
+      <section class="panel"><div class="panel-heading"><h2>프로젝트 자료 첨부</h2><span class="mini-badge">LOCAL STORAGE</span></div>
+        <form id="attachment-form" class="attachment-form"><label class="field-label" for="attachment-category">자료 종류</label><select id="attachment-category"><option value="auto">자동 분류 · OpenAPI 명세 자동 인식</option><option value="openapi">API 명세 · OpenAPI JSON / YAML</option><option value="test_plan">실험 계획 · JSON / YAML</option><option value="reference">참고 코드·문서·ZIP</option></select>
+          <div id="upload-dropzone" class="upload-dropzone"><span class="upload-symbol">↥</span><strong>프로젝트 자료를 여기에 놓으세요</strong><p>API 명세, 실험 계획, 참고 코드와 문서를 함께 보관합니다.</p><button type="button" id="choose-files-button" class="small-button">파일 선택</button><input type="file" id="attachment-files" multiple accept=".json,.yaml,.yml,.zip,.md,.txt,.java,.kt,.py,.js,.ts,.tsx,.jsx,.html,.css,.gradle,.xml,.sql,.csv,.properties,.pdf,.xlsx" aria-label="프로젝트 첨부 파일" class="file-input"></div>
+          <p class="upload-limits">파일당 20MB · 텍스트 2MB · 프로젝트당 30개<br>개인키·접근키·실제 .env 파일은 제외해주세요. 파일은 이 컴퓨터에 보관합니다.</p>
+          <ul id="pending-files" class="pending-files" aria-live="polite"></ul><div id="upload-message" class="upload-message" role="status" hidden></div><button type="submit" id="upload-button" class="primary-button" disabled><span>선택한 파일 첨부</span><span>＋</span></button>
+        </form>
+      </section>
+      <section class="panel"><div class="panel-heading"><h2>첨부된 자료 <span id="attachment-count" class="count-badge">0</span></h2><a class="download-link" href="/api/attachment-templates/test-plan">실험 계획 예시 ↓</a></div><div id="attachment-list" class="attachment-list"></div></section>
+    </div><div class="project-review-column">
+      <section class="panel"><div class="panel-heading"><h2>등록 현황</h2><span class="mini-badge">OVERVIEW</span></div><div id="project-overview" class="project-overview"></div></section>
+      <section class="panel attachment-preview-panel"><div class="panel-heading"><h2>자료 살펴보기</h2></div><div id="attachment-preview" class="attachment-preview"><div class="compact-empty"><p>첨부된 파일을 선택해주세요.<small>명세는 API 목록, ZIP은 파일 목록을 확인할 수 있습니다.</small></p></div></div></section>
+    </div></div>
+  </section>
+  <section id="lab-workspace" hidden aria-label="로컬 실험실">
+    <div class="metrics"><div><span>전체 실험</span><strong id="lab-metric-runs">0<small> runs</small></strong></div><div><span>완료된 실험</span><strong id="lab-metric-complete">0<small> runs</small></strong></div><div><span>최근 실험 시간</span><strong id="lab-metric-elapsed">-</strong></div><div><span>현재 실험 상태</span><strong class="metric-state" id="lab-metric-state">준비됨</strong></div></div>
+    <div class="lab-grid">
+      <div class="lab-setup-column">
+        <section class="panel setup-panel"><div class="panel-heading"><h2><span class="section-num">01</span> 실험 설정</h2><span class="mini-badge">HTTP · SQLITE POOL</span></div>
+          <form id="lab-form" class="lab-form">
+            <p class="field-note lab-intro">외부 인증이 느려질 때 로그인 요청이 DB 커넥션을 붙잡아 목록·검색까지 실패하는지, 같은 입력으로 개선 전/후를 측정합니다.</p>
+            <div class="lab-fields">
+              <label>로그인 사용자<input type="number" name="users" min="1" max="200" value="10" required></label>
+              <label>커넥션 풀 크기<input type="number" name="pool_size" min="1" max="30" value="10" required></label>
+              <label>외부 응답 지연(ms)<input type="number" name="external_delay_ms" min="0" max="15000" step="100" value="10000" required></label>
+              <label>개선 후 외부 호출 제한(ms)<input type="number" name="external_timeout_ms" min="50" max="5000" step="50" value="2500" required></label>
+              <label>풀 획득 대기(ms)<input type="number" name="pool_acquire_ms" min="50" max="2000" step="50" value="500" required></label>
+              <label>로그인 응답 목표(ms)<input type="number" name="login_slo_ms" min="100" max="20000" step="100" value="3000" required></label>
+              <label>로그 큐 용량<input type="number" name="log_queue_capacity" min="1" max="200" value="4" required></label>
+              <label>로그 기록 시간(ms)<input type="number" name="log_write_ms" min="0" max="300" value="50" required></label>
+            </div>
+            <label class="field-label spaced" for="lab-external-result">외부 응답 결과</label><select id="lab-external-result" name="external_result"><option value="success">지연 후 성공</option><option value="error">지연 후 오류</option></select>
+            <label class="field-label spaced" for="lab-comparison">비교 방식</label><select id="lab-comparison" name="comparison"><option value="both">개선 전 · 후 모두</option><option value="before">개선 전만</option><option value="after">개선 후만</option></select>
+            <label class="field-label spaced" for="lab-analysis">결과 해석</label><select id="lab-analysis" name="analysis_backend"><option value="metrics">측정값 규칙 판정</option><option value="ollama">측정값 + Ollama 가설 생성</option></select>
+            <div id="lab-error" class="form-error" role="alert" hidden></div>
+            <button id="lab-start" class="primary-button" type="submit"><span>실험 시작하기</span><span>↗</span></button>
+            <button id="lab-cancel" class="text-button" type="button" hidden>진행 중인 실험 중단</button>
+          </form>
+        </section>
+        <section class="panel"><div class="panel-heading"><h2>실험 기록 <span id="lab-history-count" class="count-badge">0</span></h2></div><div id="lab-history" class="lab-history"><div class="compact-empty"><p>아직 실행한 실험이 없습니다.</p></div></div></section>
+      </div>
+      <div class="results-column">
+        <section class="panel"><div class="panel-heading"><h2><span class="section-num">02</span> 개선 전 · 후 측정</h2><span id="lab-state" class="run-state">대기 중</span></div><div id="lab-cases"><div class="compact-empty"><span>⌁</span><p>실험을 시작하면 버전별 응답 시간과 커넥션 점유를 표시합니다.<small>수치는 이 컴퓨터에서 실제로 보낸 HTTP 요청의 측정값입니다.</small></p></div></div></section>
+        <section class="panel findings-panel"><div class="panel-heading"><h2><span class="section-num">03</span> 측정 기반 판정 <span id="lab-finding-count" class="count-badge">0</span></h2><span class="lab-report-links" id="lab-report-links" hidden><a id="lab-report-md" class="download-link">보고서 ↓</a><a id="lab-report-json" class="download-link">JSON ↓</a></span></div><div id="lab-findings"><div class="compact-empty"><span>◎</span><p>측정이 끝나면 영향 범위와 로그 보존 여부를 판정합니다.</p></div></div></section>
+        <section class="panel timeline-panel"><div class="panel-heading"><h2><span class="section-num">04</span> 실험 타임라인</h2><span id="lab-elapsed" class="muted">실제 실행 기록</span></div><ol id="lab-timeline" class="timeline"><li class="timeline-placeholder">설정을 확인하고 첫 실험을 시작해보세요.</li></ol></section>
+      </div>
+    </div>
+  </section>
+  <div id="demo-workspace"><div class="metrics"><div><span>전체 실행</span><strong id="metric-runs">0<small> runs</small></strong></div><div><span>완료된 실행</span><strong id="metric-complete">0<small> runs</small></strong></div><div><span>발견한 결함 후보</span><strong id="metric-findings">0<small> findings</small></strong></div><div><span>현재 실행 상태</span><strong class="metric-state" id="metric-state">준비됨</strong></div></div>
+  <div class="lab-grid">
+    <section class="panel setup-panel"><div class="panel-heading"><h2><span class="section-num">01</span> 테스트 설정</h2><span class="mini-badge">DEMO LAB</span></div>
+      <form id="run-form"><label class="field-label" for="goal">어떤 일을 해볼까요?</label><textarea id="goal" rows="4" minlength="5" maxlength="1500" required>행사 참가 신청을 완료하고, 오류가 발생하면 입력 보존과 재시도 가능 여부를 확인해줘.</textarea>
+      <div class="field-label spaced">테스트할 버전 <span>독립된 세션으로 실행</span></div>
+      <div class="scenario-list">
+        <label class="scenario"><input type="radio" name="fault" value="healthy"><span class="scenario-icon healthy">✓</span><span><strong>정상 버전</strong><small>오류 이후에도 입력 유지 · 재시도 가능</small></span></label>
+        <label class="scenario"><input type="radio" name="fault" value="reset" checked><span class="scenario-icon">↺</span><span><strong>입력값 소실</strong><small>오류가 나면 작성한 내용이 사라져요</small></span></label>
+        <label class="scenario"><input type="radio" name="fault" value="locked"><span class="scenario-icon">⊘</span><span><strong>재시도 불가</strong><small>제출 버튼이 잠긴 채로 남아요</small></span></label>
+        <label class="scenario"><input type="radio" name="fault" value="false_success"><span class="scenario-icon">!</span><span><strong>거짓 성공</strong><small>저장에 실패했지만 완료로 보여요</small></span></label>
+      </div>
+      <label class="field-label spaced" for="backend">실행 방식</label><select id="backend"><option value="rule">규칙 기반 · 브라우저 검증용</option><option value="ollama">Ollama AI · 화면을 보고 행동 결정</option></select><p id="backend-note" class="field-note">규칙 기반 모드는 AI를 사용하지 않는 비교 기준선입니다.</p>
+      <details class="contract"><summary>서비스 기대 동작 <span>4개</span></summary><ul id="contract-list"></ul></details>
+      <div id="form-error" class="form-error" role="alert" hidden></div>
+      <button id="start-button" class="primary-button" type="submit"><span>테스트 시작하기</span><span>↗</span></button>
+      <button id="preview-button" class="text-button" type="button">신청 페이지 직접 열어보기 ↗</button></form>
+    </section>
+    <div class="results-column">
+      <section class="panel browser-panel"><div class="panel-heading"><h2><span class="section-num">02</span> 브라우저 관찰</h2><span id="run-state" class="run-state">대기 중</span></div><div class="browser-bar"><span class="traffic"><i></i><i></i><i></i></span><span id="browser-address">격리된 행사 신청 페이지</span><span class="browser-lock">⌑</span></div><div class="browser-view" id="browser-view"><div id="browser-empty" class="browser-empty"><span class="empty-icon">⌁</span><strong>첫 번째 탐색을 기다리고 있어요</strong><p>테스트를 시작하면 실제 브라우저에서 관찰한<br>화면과 행동이 여기에 표시됩니다.</p><span class="empty-flow">관찰 <i>→</i> 행동 <i>→</i> 검증 <i>→</i> 재현</span></div><a id="screenshot-link" hidden target="_blank" rel="noopener"><img id="screenshot" alt="Agent가 관찰한 실제 테스트 화면"></a></div><div class="browser-footer"><span><i class="live-dot"></i> <span id="observation-label">스크린샷 · 화면 구조 · 네트워크 응답</span></span><span id="step-count">0 actions</span></div></section>
+      <section class="panel findings-panel"><div class="panel-heading"><h2><span class="section-num">03</span> 발견과 증거 <span id="finding-count" class="count-badge">0</span></h2><a id="report-link" class="download-link" hidden>보고서 다운로드 ↓</a></div><div id="findings"><div class="compact-empty"><span>◎</span><p>관찰한 실패와 독립 재현 결과를 모읍니다.<small>Agent 실행 오류는 서비스 결함으로 집계하지 않습니다.</small></p></div></div></section>
+      <section class="panel timeline-panel"><div class="panel-heading"><h2><span class="section-num">04</span> 실행 타임라인</h2><span id="elapsed" class="muted">실제 실행 기록</span></div><ol id="timeline" class="timeline"><li class="timeline-placeholder">목표를 설정하고 첫 테스트를 시작해보세요.</li></ol></section>
+    </div>
+  </div></div><footer class="page-footer">CrashCustomer <span>실패를 관찰하고, 증거로 설명합니다.</span><span>v0.1 · LOCAL FIRST</span></footer>
+  <dialog id="project-dialog"><form id="project-form"><div class="dialog-heading"><div><span class="eyebrow">NEW TESTING SPACE</span><h2 id="project-dialog-title">프로젝트 등록</h2></div><button type="button" id="close-project-dialog" aria-label="프로젝트 등록 닫기">×</button></div><p class="dialog-description">프로젝트별로 검증할 주소와 자료를 정리하세요.</p><label class="field-label" for="project-input-name">프로젝트 이름 <span>필수</span></label><input id="project-input-name" required maxlength="80" placeholder="예: Hangari"><label class="field-label spaced" for="project-input-description">설명</label><textarea id="project-input-description" rows="2" maxlength="1500" placeholder="어떤 서비스이고, 무엇을 검증하고 싶은가요?"></textarea><label class="field-label spaced" for="project-input-api">API 서버 주소 <span>선택</span></label><input id="project-input-api" type="url" maxlength="2048" placeholder="http://localhost:10000"><label class="field-label spaced" for="project-input-browser">브라우저 테스트 주소 <span>선택</span></label><input id="project-input-browser" type="url" maxlength="2048" placeholder="http://localhost:10000/simulator/"><p class="field-note">주소는 연결 정보로 보관하며, 등록 시 서버에 요청을 보내지 않습니다.</p><div id="project-form-error" class="form-error" role="alert" hidden></div><button type="submit" id="save-project-button" class="primary-button"><span>프로젝트 만들기</span><span>↗</span></button></form></dialog>
+</main>
+</body></html>

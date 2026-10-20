@@ -1,0 +1,179 @@
+{
+  "date": "2026-10-20",
+  "model": "qwen3:8b",
+  "target": "examples/shop_app.py (buggy / fixed)",
+  "measurements": {
+    "rule": {
+      "backend": "rule",
+      "max_scenarios": 3,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 0,
+      "elapsed_seconds": 22.38,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "7232f893c0304ce38063349e711e3d80",
+          "status": "completed",
+          "error": null,
+          "expected": [
+            "double_submit",
+            "input_loss",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "double_submit",
+            "input_loss",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "scenarios": [
+            "POST /api/buggy/orders · HTTP 503 응답",
+            "POST /api/buggy/orders · 3초 지연",
+            "POST /api/buggy/orders · 연결 끊김"
+          ],
+          "summary": {
+            "scenarios": 3,
+            "findings": 4,
+            "confirmed": 4,
+            "unique_codes": [
+              "double_submit",
+              "input_loss",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 10,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 11.98
+          }
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "09e3fe3be0eb4cffa9d83340e8ca6de4",
+          "status": "completed",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "scenarios": [
+            "POST /api/fixed/orders · HTTP 503 응답",
+            "POST /api/fixed/orders · 3초 지연",
+            "POST /api/fixed/orders · 연결 끊김"
+          ],
+          "summary": {
+            "scenarios": 3,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 10.4
+          }
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization."
+    },
+    "ollama": {
+      "backend": "ollama",
+      "max_scenarios": 3,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 36,
+      "elapsed_seconds": 99.5,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "4c9e66a208444fb8b634bacf8a6bfbfb",
+          "status": "completed",
+          "error": null,
+          "expected": [
+            "double_submit",
+            "input_loss",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "double_submit",
+            "input_loss",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "scenarios": [
+            "POST /api/buggy/orders · HTTP 503 응답",
+            "POST /api/buggy/orders · 연결 끊김",
+            "POST /api/buggy/orders · 3초 지연"
+          ],
+          "summary": {
+            "scenarios": 3,
+            "findings": 4,
+            "confirmed": 4,
+            "unique_codes": [
+              "double_submit",
+              "input_loss",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 10,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 17,
+              "input_tokens": 12622,
+              "output_tokens": 818
+            },
+            "elapsed_seconds": 48.26
+          }
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "6390b1e48c134e3189491fc42c8a65d5",
+          "status": "completed",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "scenarios": [
+            "POST /api/fixed/orders · HTTP 503 응답",
+            "POST /api/fixed/orders · 연결 끊김",
+            "POST /api/fixed/orders · 3초 지연"
+          ],
+          "summary": {
+            "scenarios": 3,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 19,
+              "input_tokens": 14136,
+              "output_tokens": 838
+            },
+            "elapsed_seconds": 51.24
+          }
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization."
+    }
+  }
+}
