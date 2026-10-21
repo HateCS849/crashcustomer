@@ -1,0 +1,196 @@
+{
+  "model": "qwen3:8b",
+  "verified": true,
+  "scope": "실제 LLM 계획·MCP 연동만 확인. 브라우저 탐지율 평가 아님.",
+  "attempts": [
+    {
+      "plan": [
+        {
+          "candidate_id": "c0",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_503",
+          "label": "POST /api/fixed/orders · HTTP 503 응답",
+          "reason": "주문 생성 시 서버 일시 오류 발생 시 재시도가 필요한 경우 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c1",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "abort",
+          "label": "POST /api/fixed/orders · 연결 끊김",
+          "reason": "연결 끊김 시 재시도가 필요하며, 모바일 사용자에게 큰 영향을 줍니다."
+        },
+        {
+          "candidate_id": "c2",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "delay",
+          "label": "POST /api/fixed/orders · 3초 지연",
+          "reason": "지연 시 중복 클릭으로 인한 오류 발생 가능성이 높아 재시도 점검이 필요합니다."
+        },
+        {
+          "candidate_id": "c3",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_401",
+          "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+          "reason": "인증 만료 시 재로그인 필요로 인해 주문 완료가 중단될 수 있습니다."
+        },
+        {
+          "candidate_id": "c4",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_429",
+          "label": "POST /api/fixed/orders · HTTP 429 요청 제한",
+          "reason": "요청 제한 시 재시도가 필요하며, 사용자 경험에 큰 영향을 줍니다."
+        },
+        {
+          "candidate_id": "c5",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "mutate",
+          "label": "POST /api/fixed/orders · 응답 형식 변경",
+          "reason": "응답 형식 변경 시 API 버전 불일치로 인해 주문 처리가 실패할 수 있습니다."
+        },
+        {
+          "candidate_id": "c6",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "duplicate",
+          "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+          "reason": "중복 클릭 시 중복 주문 발생 가능성이 높아 재시도 점검이 필요합니다."
+        },
+        {
+          "candidate_id": "c7",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_500",
+          "label": "POST /api/fixed/orders · HTTP 500 응답",
+          "reason": "서버 내부 오류 발생 시 재시도가 필요하며, 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c13",
+          "method": "GET",
+          "path": "/api/fixed/inventory",
+          "fault": "persistent_503",
+          "label": "GET /api/fixed/inventory · 연속 503 (12회)",
+          "reason": "지속적인 503 오류 시 재시도가 필요하며, 사용자 경험에 큰 영향을 줍니다."
+        },
+        {
+          "candidate_id": "c15",
+          "method": "*",
+          "path": "*",
+          "fault": "slow_network",
+          "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+          "reason": "느린 네트워크 시 주문 처리 지연 및 재시도 필요성이 높습니다."
+        },
+        {
+          "candidate_id": "c16",
+          "method": "GET",
+          "path": "*",
+          "fault": "asset_block",
+          "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+          "reason": "정적 파일 로딩 실패 시 UI 오류 발생 가능성이 높아 재시도 점검이 필요합니다."
+        }
+      ],
+      "coverage": {
+        "available": [
+          "status_503",
+          "abort",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "duplicate",
+          "status_500",
+          "persistent_503",
+          "slow_network",
+          "asset_block"
+        ],
+        "required": [
+          "status_503",
+          "abort",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "duplicate",
+          "status_500",
+          "persistent_503",
+          "slow_network",
+          "asset_block"
+        ],
+        "planned": [
+          "status_503",
+          "abort",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "duplicate",
+          "status_500",
+          "persistent_503",
+          "slow_network",
+          "asset_block"
+        ],
+        "missing": [],
+        "out_of_budget": []
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 1859,
+        "output_tokens": 498
+      }
+    }
+  ],
+  "mcp_calls": [
+    "tools/call:search_project_references",
+    "prompts/get:qa_plan",
+    "resources/read:runbooks",
+    "tools/call:check_plan_coverage"
+  ],
+  "final_coverage": {
+    "available": [
+      "status_503",
+      "abort",
+      "delay",
+      "status_401",
+      "status_429",
+      "mutate",
+      "duplicate",
+      "status_500",
+      "persistent_503",
+      "slow_network",
+      "asset_block"
+    ],
+    "required": [
+      "status_503",
+      "abort",
+      "delay",
+      "status_401",
+      "status_429",
+      "mutate",
+      "duplicate",
+      "status_500",
+      "persistent_503",
+      "slow_network",
+      "asset_block"
+    ],
+    "planned": [
+      "status_503",
+      "abort",
+      "delay",
+      "status_401",
+      "status_429",
+      "mutate",
+      "duplicate",
+      "status_500",
+      "persistent_503",
+      "slow_network",
+      "asset_block"
+    ],
+    "missing": [],
+    "out_of_budget": []
+  }
+}

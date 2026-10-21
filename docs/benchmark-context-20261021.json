@@ -1,0 +1,383 @@
+{
+  "complete": true,
+  "model": "qwen3:8b",
+  "measured_at": "2026-10-21T00:48:58.341100+00:00",
+  "repeats": 3,
+  "fixtures": 3,
+  "fixture_file": "context-fixtures-20261021.json",
+  "fixture_sha256": "72dcc38d0156ffd44ef26f3f54253980d0b1a060d08f78acba539c1354c5c906",
+  "control": "Full observed DOM text+ARIA+history vs text<=1500/no ARIA/last5 actions. All other action guards identical.",
+  "order": "alternating paired order; one excluded compact warmup call",
+  "summary": {
+    "full": {
+      "calls": 9,
+      "valid_decisions": 9,
+      "errors": 0,
+      "mean_input_tokens": 937,
+      "mean_output_tokens": 38.67,
+      "mean_ms": 2214.13,
+      "median_ms": 2240.14,
+      "min_ms": 1808.61,
+      "max_ms": 2549.18
+    },
+    "compact": {
+      "calls": 9,
+      "valid_decisions": 9,
+      "errors": 0,
+      "mean_input_tokens": 818.33,
+      "mean_output_tokens": 38,
+      "mean_ms": 2075.55,
+      "median_ms": 2018.1,
+      "min_ms": 1710.83,
+      "max_ms": 2746.49
+    },
+    "input_token_reduction_percent": 12.66,
+    "same_kind_and_target_pairs": 9,
+    "pairs": 9
+  },
+  "results": [
+    {
+      "repeat": 1,
+      "fixture": 0,
+      "step": 0,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "받는 분",
+        "value": "김테스터",
+        "reason": "받는 분 필드에 유효한 이름을 입력했습니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 977,
+        "output_tokens": 39
+      },
+      "ms": 2419.76
+    },
+    {
+      "repeat": 1,
+      "fixture": 0,
+      "step": 0,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "받는 분",
+        "value": "김테스터",
+        "reason": "필수 입력란에 유효한 이름을 입력했습니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 864,
+        "output_tokens": 38
+      },
+      "ms": 2110.97
+    },
+    {
+      "repeat": 1,
+      "fixture": 1,
+      "step": 2,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "수량",
+        "value": "5",
+        "reason": "수량 필드에 1~10 사이의 유효한 값을 입력합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 798,
+        "output_tokens": 41
+      },
+      "ms": 2746.49
+    },
+    {
+      "repeat": 1,
+      "fixture": 1,
+      "step": 2,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "수량",
+        "value": "5",
+        "reason": "수량 입력 필드에 유효한 값을 입력하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 918,
+        "output_tokens": 42
+      },
+      "ms": 2350.26
+    },
+    {
+      "repeat": 1,
+      "fixture": 2,
+      "step": 3,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "click",
+        "target": "주문하기",
+        "value": "",
+        "reason": "주문하기 버튼을 클릭하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 916,
+        "output_tokens": 35
+      },
+      "ms": 2173.67
+    },
+    {
+      "repeat": 1,
+      "fixture": 2,
+      "step": 3,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "click",
+        "target": "주문하기",
+        "value": "",
+        "reason": "주문하기 버튼을 클릭하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 793,
+        "output_tokens": 35
+      },
+      "ms": 1754.99
+    },
+    {
+      "repeat": 2,
+      "fixture": 0,
+      "step": 0,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "받는 분",
+        "value": "김테스터",
+        "reason": "필수 입력란에 유효한 이름을 입력했습니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 864,
+        "output_tokens": 38
+      },
+      "ms": 2021.37
+    },
+    {
+      "repeat": 2,
+      "fixture": 0,
+      "step": 0,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "받는 분",
+        "value": "김테스터",
+        "reason": "받는 분 필드에 유효한 이름을 입력했습니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 977,
+        "output_tokens": 39
+      },
+      "ms": 2367.27
+    },
+    {
+      "repeat": 2,
+      "fixture": 1,
+      "step": 2,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "수량",
+        "value": "5",
+        "reason": "수량 입력 필드에 유효한 값을 입력하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 918,
+        "output_tokens": 42
+      },
+      "ms": 2549.18
+    },
+    {
+      "repeat": 2,
+      "fixture": 1,
+      "step": 2,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "수량",
+        "value": "5",
+        "reason": "수량 필드에 1~10 사이의 유효한 값을 입력합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 798,
+        "output_tokens": 41
+      },
+      "ms": 2018.1
+    },
+    {
+      "repeat": 2,
+      "fixture": 2,
+      "step": 3,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "click",
+        "target": "주문하기",
+        "value": "",
+        "reason": "주문하기 버튼을 클릭하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 793,
+        "output_tokens": 35
+      },
+      "ms": 1945.37
+    },
+    {
+      "repeat": 2,
+      "fixture": 2,
+      "step": 3,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "click",
+        "target": "주문하기",
+        "value": "",
+        "reason": "주문하기 버튼을 클릭하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 916,
+        "output_tokens": 35
+      },
+      "ms": 1885.23
+    },
+    {
+      "repeat": 3,
+      "fixture": 0,
+      "step": 0,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "받는 분",
+        "value": "김테스터",
+        "reason": "받는 분 필드에 유효한 이름을 입력했습니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 977,
+        "output_tokens": 39
+      },
+      "ms": 1808.61
+    },
+    {
+      "repeat": 3,
+      "fixture": 0,
+      "step": 0,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "받는 분",
+        "value": "김테스터",
+        "reason": "필수 입력란에 유효한 이름을 입력했습니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 864,
+        "output_tokens": 38
+      },
+      "ms": 1986.37
+    },
+    {
+      "repeat": 3,
+      "fixture": 1,
+      "step": 2,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "수량",
+        "value": "5",
+        "reason": "수량 필드에 1~10 사이의 유효한 값을 입력합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 798,
+        "output_tokens": 41
+      },
+      "ms": 2385.49
+    },
+    {
+      "repeat": 3,
+      "fixture": 1,
+      "step": 2,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "fill",
+        "target": "수량",
+        "value": "5",
+        "reason": "수량 입력 필드에 유효한 값을 입력하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 918,
+        "output_tokens": 42
+      },
+      "ms": 2240.14
+    },
+    {
+      "repeat": 3,
+      "fixture": 2,
+      "step": 3,
+      "mode": "full",
+      "valid": true,
+      "action": {
+        "kind": "click",
+        "target": "주문하기",
+        "value": "",
+        "reason": "주문하기 버튼을 클릭하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 916,
+        "output_tokens": 35
+      },
+      "ms": 2133.03
+    },
+    {
+      "repeat": 3,
+      "fixture": 2,
+      "step": 3,
+      "mode": "compact",
+      "valid": true,
+      "action": {
+        "kind": "click",
+        "target": "주문하기",
+        "value": "",
+        "reason": "주문하기 버튼을 클릭하여 주문을 완료합니다."
+      },
+      "usage": {
+        "calls": 1,
+        "input_tokens": 793,
+        "output_tokens": 35
+      },
+      "ms": 1710.83
+    }
+  ],
+  "scope": "Decision-level evaluation on three frozen states of a synthetic shop. Not a browser completion or real-world recall benchmark. Local inference: tokens/time measured, monetary cost not estimated."
+}

@@ -2,8 +2,8 @@
   const el = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clock = s => new Date(s).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  const states = {queued:'대기',running:'점검 중',completed:'완료',error:'실행 오류',interrupted:'중단됨'};
-  const stages = {queued:'대기',recon:'탐색 에이전트',retrieve:'자료 검색(RAG)',plan:'계획 에이전트',attack:'장애 주입·검증',probe:'API 측정',summarize:'요약',complete:'완료',error:'오류'};
+  const states = {queued:'대기',running:'점검 중',completed:'완료',error:'실행 오류',interrupted:'중단됨',partial:'부분 완료',inconclusive:'판정 불가'};
+  const stages = {route:'의도 라우팅',chat_answer:'사용 안내',gate:'기준선 검증',replan_check:'누락 검사·재계획',write:'보고서 초안',validate:'결과 검증',finalize:'결과 확정',queued:'대기',recon:'탐색 에이전트',retrieve:'자료 검색(RAG)',plan:'계획 에이전트',attack:'장애 주입·검증',probe:'API 측정',summarize:'요약',complete:'완료',error:'오류'};
   const verification = {confirmed:'독립 재현 확인',unconfirmed:'재현 미확인',pending:'재현 대기',measured:'실측'};
   const active = c => c && ['queued','running'].includes(c.status);
   let project = null, campaigns = [], selected = null, current = null, busy = false, timer = null;
@@ -31,6 +31,7 @@
 
   function renderCampaign(c) {
     current = c;
+    window.crashEvents.watch('campaign', 'campaigns', c, renderCampaign);
     const running = active(c);
     el('campaign-start').disabled = busy || running || project?.execution?.status !== 'ready';
     el('campaign-start').firstElementChild.textContent = running ? '사전 점검 진행 중…' : '사전 점검 시작하기';
@@ -41,8 +42,12 @@
     el('campaign-elapsed').textContent = c.elapsed_seconds != null ? `${c.elapsed_seconds.toFixed(1)}초 · LLM ${c.summary?.llm_usage.calls ?? 0}회` : '실행 중 · 실제 기록';
     const s = c.summary;
     el('campaign-finding-count').textContent = s ? s.confirmed : 0;
-    el('campaign-summary').innerHTML = s ? `<div class="campaign-stats"><div><span>장애 시나리오</span><strong>${s.scenarios}개</strong></div><div><span>독립 재현 결함</span><strong class="${s.confirmed?'bad':''}">${s.confirmed} / ${s.findings}건</strong></div><div><span>위험 점수</span><strong class="${s.risk_score?'bad':''}">${s.risk_score}</strong></div><div><span>기준 실행 목표 완료</span><strong>${s.baseline_completed?'예':'아니오'}</strong></div></div>` : '';
-    let html = '';
+    el('campaign-summary').innerHTML = s ? `<div class="campaign-stats"><div><span>장애 시나리오</span><strong>${s.scenarios}개</strong></div><div><span>재현·실측 확인 결함</span><strong class="${s.confirmed?'bad':''}">${s.confirmed} / ${s.findings}건</strong></div><div><span>위험 점수</span><strong class="${s.risk_score?'bad':''}">${s.risk_score}</strong></div><div><span>기준 실행 목표 완료</span><strong>${s.baseline_completed?'예':'아니오'}</strong></div></div>` : '';
+    let html = c.validation ? `<div class="reference"><b>결과 검증 · ${esc(c.validation.verdict)}</b><p>${esc(c.validation.issues.join('\n') || '기준선·범위·재현 근거 검증 통과')}</p></div>` : '';
+    if (!running && !c.validation && !c.answer) html += '<div class="error-result">검증기 추가 전의 이전 기록입니다. 현재 기준의 충분성 검증은 새 점검에서 확인하세요.</div>';
+    if (c.answer) html += `<div class="reference">${esc(c.answer)}</div>`;
+    if (c.coverage) html += `<div class="reference"><b>장애 유형 ${c.coverage.planned.length}/${c.coverage.available.length}개 · 계획 ${c.plan_attempts}회</b><p>미점검: ${esc([...c.coverage.missing, ...c.coverage.out_of_budget].join(', ') || '없음')}</p></div>`;
+    if (c.mcp) html += `<details class="reference"><summary>MCP 실제 호출 ${c.mcp.calls.length}회</summary><p>${esc(c.mcp.calls.join('\n'))}</p></details>`;
     if (c.error) html += `<div class="error-result"><strong>사전 점검 실행 오류 · 서비스 결함 아님</strong><br>${esc(c.error)}</div>`;
     if (c.run_ids?.length) html += `<article class="scenario-row"><header><h3>기준 실행 · 장애 주입 없음</h3><span class="verification">관찰된 API ${c.observed_requests.length}개</span></header><p class="reason">${esc(c.observed_requests.map(r => r.method + ' ' + r.path).join(', ') || '관찰된 API 요청 없음')}</p><div class="evidence-links"><button type="button" data-run="${esc(c.run_ids[0])}">실행 상세 보기 ↗</button></div></article>`;
     html += (c.scenarios || []).map(sc => {
@@ -50,7 +55,7 @@
       const body = sc.status == null ? '<li class="ok">실행 대기 중</li>'
         : findings.length ? findings.map(f => `<li><b>${esc(f.title)}</b> · ${esc(verification[f.verification] || f.verification)}<br>${esc(f.actual)}</li>`).join('')
         : `<li class="ok">계약 위반 없음 · ${sc.result === 'goal_completed' ? '장애 후 재시도로 목표 완료' : esc(sc.result || sc.status)}</li>`;
-      return `<article class="scenario-row"><header><h3>${esc(sc.label)}</h3>${sc.status ? `<span class="run-state ${esc(sc.status)}">${esc(sc.status === 'completed' ? '완료' : sc.status)}</span>` : ''}</header><p class="reason">계획 근거: ${esc(sc.reason)}</p><ul>${body}</ul>${sc.run_id ? `<div class="evidence-links"><button type="button" data-run="${esc(sc.run_id)}">화면·타임라인 보기 ↗</button><a href="/api/runs/${esc(sc.run_id)}/report">실행 보고서 ↓</a><a href="/artifacts/${esc(sc.run_id)}/explore/trace.zip">Trace ↓</a></div>` : ''}</article>`;
+      return `<article class="scenario-row"><header><h3>${esc(sc.label)}</h3>${sc.status ? `<span class="run-state ${esc(sc.status)}">${esc(sc.status === 'completed' ? '완료' : sc.status)}</span>` : ''}</header><p class="reason">계획 근거: ${esc(sc.reason)}</p><ul>${body}</ul>${sc.run_id ? `<div class="evidence-links"><button type="button" data-run="${esc(sc.run_id)}">화면·타임라인 보기 ↗</button><a href="/api/runs/${esc(sc.run_id)}/report">실행 보고서 ↓</a>${sc.trace_enabled === false ? '<span>인증 보호 · Trace 미저장</span>' : `<a href="/artifacts/${esc(sc.run_id)}/explore/trace.zip">Trace ↓</a>`}</div>` : ''}</article>`;
     }).join('');
     el('campaign-scenarios').innerHTML = html || '<div class="compact-empty"><span>⌁</span><p>기준 실행을 준비하고 있습니다.</p></div>';
     el('campaign-probes').innerHTML = renderProbes(c.probes, running);
@@ -58,7 +63,7 @@
       ? c.references.map(r => `<div class="reference"><b>${esc(r.source)} · ${esc(r.method)} ${esc(r.score)}</b><p>${esc(r.text.slice(0, 400))}</p></div>`).join('')
       : `<div class="compact-empty"><p>${running ? '검색 단계 이후 표시합니다.' : '참고한 첨부 자료가 없습니다. OpenAPI 명세나 운영 문서를 첨부하면 계획 근거로 사용합니다.'}</p></div>`;
     el('campaign-timeline').innerHTML = c.events?.length
-      ? c.events.slice().reverse().map(e => `<li><time>${esc(clock(e.time))}</time><div><b>${esc(stages[e.stage] || e.stage)}</b> ${esc(e.message)}</div></li>`).join('')
+      ? [...c.events, ...(c.active_run?.events || []).map(e => ({...e, stage:'탐색 · ' + e.node}))].sort((a,b) => a.time.localeCompare(b.time)).reverse().map(e => `<li><time>${esc(clock(e.time))}</time><div><b>${esc(stages[e.stage] || e.stage)}</b> ${esc(e.message)}</div></li>`).join('')
       : '<li class="timeline-placeholder">점검 시작을 기다리고 있습니다.</li>';
   }
 
@@ -68,17 +73,18 @@
     const v = probes.validation;
     if (v) {
       const bad = v.results.filter(r => r.status >= 500 || r.status === 0);
-      html += `<div class="reference"><b>입력 검증 · 잘못된 요청 ${v.requests}건</b><p>${bad.length ? bad.slice(0, 6).map(r => `${r.method} ${r.path} · ${r.variant} → ${r.status}`).join('\n') : '모든 잘못된 요청이 4xx로 거절되었습니다.'}</p></div>`;
+      html += `<div class="reference"><b>입력 검증 · 잘못된 요청 ${v.requests}건</b><p>${bad.length ? bad.slice(0, 6).map(r => `${r.method} ${r.path} · ${r.variant} → ${r.status}`).join('\n') : v.valid === false ? '인증 실패 · 입력 검증 무효' : v.accepted_invalid ? `잘못된 입력 ${v.accepted_invalid}건이 2xx로 수락됨 · 추가 확인 필요` : '관찰된 잘못된 요청은 4xx로 거절되었습니다.'}</p></div>`;
     }
     const load = probes.load;
-    if (load) {
+    if (load && load.valid === false) html += `<div class="error-result"><b>부하 측정 무효</b><p>${esc(load.reason)}</p>${esc((load.preflight || []).map(p => `${p.path} → ${p.status}`).join(', '))}</div>`;
+    if (load && load.valid !== false) {
       html += `<div class="lab-case"><p>단계별 부하 · ${esc(load.paths.join(', '))} · 목표 P95 ${load.slo_ms}ms · ${load.saturation_users ? `동시 ${load.saturation_users}명에서 목표 초과` : '목표 이내'}</p><div class="lab-table-wrap"><table class="lab-table"><thead><tr><th>동시 사용자</th><th>요청</th><th>오류율</th><th>P50(ms)</th><th>P95(ms)</th><th>처리량(rps)</th></tr></thead><tbody>${load.stages.map(st => `<tr><td>${st.users}명</td><td>${st.requests}</td><td class="${st.error_rate > .05 ? 'bad' : ''}">${(st.error_rate * 100).toFixed(1)}%</td><td>${st.p50_ms}</td><td class="${st.p95_ms > load.slo_ms ? 'bad' : ''}">${st.p95_ms}</td><td>${st.throughput_rps}</td></tr>`).join('')}</tbody></table></div></div>`;
     }
     return html || '<div class="compact-empty"><p>측정할 요청이 없었습니다.</p></div>';
   }
 
   function resetResults() {
-    current = null;
+    current = null; window.crashEvents.watch('campaign', 'campaigns', null, renderCampaign);
     el('campaign-summary').innerHTML = '';
     el('campaign-finding-count').textContent = 0;
     el('campaign-report').hidden = true;
@@ -102,8 +108,8 @@
   }
   async function poll() {
     clearTimeout(timer);
-    if (project && !el('project-workspace').hidden) await refresh();
-    timer = setTimeout(poll, active(current) ? 1000 : 5000);
+    if (project && !el('project-workspace').hidden && !window.crashEvents.connected('campaign')) await refresh();
+    timer = setTimeout(poll, 5000);
   }
   async function checkConnection(withHealth) {
     if (!project) return;
@@ -131,7 +137,8 @@
     try {
       const result = await request(`/api/projects/${project.id}/campaigns`, {method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({goal: el('campaign-goal').value, backend: el('campaign-backend').value, max_scenarios: Number(el('campaign-max').value),
-          api_checks: el('campaign-api').checked, load_test: el('campaign-load').checked, load_max_users: Number(el('campaign-users').value)})});
+          api_checks: el('campaign-api').checked, load_test: el('campaign-load').checked, load_max_users: Number(el('campaign-users').value), test_token: el('campaign-token').value || null})});
+      el('campaign-token').value = '';
       selected = result.id; await refresh(); poll();
     } catch (error) { showError(error.message); }
     finally { busy = false; if (current) renderCampaign(current); else el('campaign-start').disabled = project?.execution?.status !== 'ready'; }
@@ -141,7 +148,7 @@
     load(next) {
       const changed = project?.id !== next.id;
       project = next;
-      if (changed) { selected = null; campaigns = []; el('campaign-history').innerHTML = ''; showError(''); resetResults(); }
+      if (changed) { el('campaign-token').value = ''; selected = null; campaigns = []; el('campaign-history').innerHTML = ''; showError(''); resetResults(); }
       checkConnection(changed);
       poll();
     },

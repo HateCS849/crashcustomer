@@ -1,0 +1,42 @@
+{
+  "measured_at": "2026-10-21T00:58:15.788351+00:00",
+  "command": "python -m pytest -q",
+  "returncode": 0,
+  "passed": 131,
+  "javascript_syntax": [
+    {
+      "file": "static/app.js",
+      "passed": true
+    },
+    {
+      "file": "static/campaign.js",
+      "passed": true
+    },
+    {
+      "file": "static/events.js",
+      "passed": true
+    },
+    {
+      "file": "static/lab.js",
+      "passed": true
+    },
+    {
+      "file": "static/projects.js",
+      "passed": true
+    }
+  ],
+  "external_tracing": false,
+  "environment": {
+    "python": "3.12.13",
+    "system": "Darwin",
+    "architecture": "arm64",
+    "packages": {
+      "fastapi": "0.150.0",
+      "langgraph": "1.2.16",
+      "langsmith": "0.14.11",
+      "mcp": "1.30.0",
+      "playwright": "1.64.0",
+      "httpx": "0.28.1"
+    }
+  }
+}

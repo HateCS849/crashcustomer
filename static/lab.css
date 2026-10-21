@@ -1,5 +1,7 @@
 .lab-setup-column{display:flex;flex-direction:column;gap:18px;min-width:0}
 .lab-form{padding:20px}
+.lab-form input[type=password],#assistant-message{width:100%;border:1px solid #dfe5d9;border-radius:6px;padding:10px;background:#fafbf7;color:#445447}
+.run-state.partial,.run-state.inconclusive{background:#fff1d8;color:#936629}
 .lab-intro{margin:0 0 16px}
 .lab-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
 .lab-fields label{display:flex;flex-direction:column;gap:6px;font-size:9px;font-weight:600;color:#5d6e57}

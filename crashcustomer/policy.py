@@ -64,8 +64,20 @@ class RulePolicy:
 
 
 class OllamaPolicy:
-    def __init__(self, contract: list[str] | None = None):
+    def __init__(self, contract: list[str] | None = None, *, compact_context: bool = True):
         self.contract = contract or CONTRACT
+        # The full mode is an evaluation control; production uses the compact default.
+        self.compact_context = compact_context
+
+    def context(self, snapshot, actions):
+        hidden = {"screenshot", "injected", "mid_flight", "requests_window", "busy_timeout", "error_count"}
+        if self.compact_context:
+            hidden.add("aria")
+        observation = {key: value for key, value in snapshot.items() if key not in hidden}
+        if self.compact_context and "text" in observation:
+            observation["text"] = observation["text"][:1500]
+        history = actions[-5:] if self.compact_context else actions
+        return observation, [{k: a[k] for k in ("kind", "target", "value")} for a in history]
 
     @traced("explorer.decide", run_type="llm")
     async def decide(self, goal: str, snapshot: dict, actions: list[dict]) -> tuple[Action, dict]:
@@ -80,13 +92,10 @@ class OllamaPolicy:
         )
         choices = available_actions(snapshot)
         # Injection metadata stays with the judge; the explorer sees only what a user could see.
-        hidden = {"screenshot", "aria", "injected", "mid_flight", "requests_window", "busy_timeout", "error_count"}
-        observation = {key: value for key, value in snapshot.items() if key not in hidden}
-        if "text" in observation:
-            observation["text"] = observation["text"][:1500]
+        observation, history = self.context(snapshot, actions)
         prompt = json.dumps({"goal": goal, "service_contract": self.contract, "observation": observation,
                              "choices": choices,
-                             "previous_actions": [{k: a[k] for k in ("kind", "target", "value")} for a in actions[-5:]]}, ensure_ascii=False)
+                             "previous_actions": history}, ensure_ascii=False)
         schema = Decision.model_json_schema()
         schema["properties"]["action_id"]["enum"] = [c["action_id"] for c in choices]
         async with httpx.AsyncClient(timeout=90, trust_env=False) as client:

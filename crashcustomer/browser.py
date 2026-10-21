@@ -21,6 +21,7 @@ from playwright.async_api import async_playwright
 
 from .config import browser_options
 from .models import Action
+from .secrets import scrub
 
 OBSERVE_JS = """() => {
  const visible = e => !!(e.getClientRects().length) && getComputedStyle(e).visibility !== 'hidden';
@@ -68,8 +69,11 @@ def mutate_body(text: str) -> str:
 
 
 class BrowserTools:
-    def __init__(self, url: str, directory: Path, run_id: str, phase: str, scope: str = "demo", faults: list[dict] | None = None):
+    def __init__(self, url: str, directory: Path, run_id: str, phase: str, scope: str = "demo", faults: list[dict] | None = None, auth_headers: dict | None = None):
         self.url, self.directory, self.run_id, self.phase, self.scope = url, directory, run_id, phase, scope
+        self.auth_headers = auth_headers or {}
+        self.secret_values = [v.removeprefix("Bearer ") for v in self.auth_headers.values()]
+        self.trace_enabled = not bool(self.auth_headers)
         self.responses, self.console, self.errors, self.blocked = [], [], [], []
         self.requests, self.injected, self.mid_flight = [], [], []
         self.faults = [{**rule, "remaining": rule.get("times", 1)} for rule in faults or []]
@@ -84,16 +88,17 @@ class BrowserTools:
         try:
             self.pw = await async_playwright().start()
             self.browser = await self.pw.chromium.launch(**browser_options())
-            self.context = await self.browser.new_context(viewport={"width": 1280, "height": 900}, locale="ko-KR")
-            await self.context.tracing.start(screenshots=True, snapshots=True, sources=False)
+            self.context = await self.browser.new_context(viewport={"width": 1280, "height": 900}, locale="ko-KR", extra_http_headers=self.auth_headers)
+            if self.trace_enabled:
+                await self.context.tracing.start(screenshots=True, snapshots=True, sources=False)
             self.page = await self.context.new_page()
             self.page.set_default_timeout(5000)
             self.page.on("response", self._response)
             self.page.on("request", self._request)
             self.page.on("requestfailed", self._failed)
             self.page.on("requestfinished", lambda request: self.inflight.discard(id(request)))
-            self.page.on("console", lambda msg: self.console.append({"type": msg.type, "text": msg.text[:1500]}))
-            self.page.on("pageerror", lambda error: self.errors.append(str(error)[:1500]))
+            self.page.on("console", lambda msg: self.console.append({"type": msg.type, "text": scrub(msg.text[:1500], self.secret_values)}))
+            self.page.on("pageerror", lambda error: self.errors.append(scrub(str(error)[:1500], self.secret_values)))
             await self.context.route("**/*", self._guard_request)
             if "slow_network" in self.page_faults:
                 cdp = await self.context.new_cdp_session(self.page)
@@ -150,7 +155,7 @@ class BrowserTools:
         elif rule["mode"] == "abort":
             await route.abort("connectionreset")
         elif rule["mode"] == "mutate":
-            response = await route.fetch()
+            response = await route.fetch(max_redirects=0)
             await route.fulfill(response=response, body=mutate_body(await response.text()))
         else:
             await asyncio.sleep(rule.get("delay_ms", 3000) / 1000)
@@ -163,11 +168,11 @@ class BrowserTools:
             self.assets.append({"type": request.resource_type, "path": urlsplit(request.url).path})
         if request.resource_type in {"fetch", "xhr"}:
             self.inflight.add(id(request))
-            self.requests.append({"method": request.method, "path": urlsplit(request.url).path, "body": parse_body(request.post_data)})
+            self.requests.append({"method": request.method, "path": urlsplit(request.url).path, "query": scrub(urlsplit(request.url).query, self.secret_values), "body": scrub(parse_body(request.post_data), self.secret_values)})
 
     def _response(self, response):
         if response.request.resource_type in {"fetch", "xhr"}:
-            self.responses.append({"url": response.url, "method": response.request.method, "status": response.status})
+            self.responses.append({"url": scrub(response.url, self.secret_values), "content_type": response.headers.get("content-type", ""), "method": response.request.method, "status": response.status})
 
     def _failed(self, request):
         self.inflight.discard(id(request))
@@ -208,10 +213,11 @@ class BrowserTools:
         self.network_cursor = len(self.responses)
         snapshot["step"] = step
         filename = f"{step:02d}.png"
-        await self.page.screenshot(path=str(self.directory / filename), full_page=True)
+        await self.page.screenshot(path=str(self.directory / filename), full_page=True,
+                                   mask=[self.page.locator("input[type=password]")] + [self.page.get_by_text(v, exact=False) for v in self.secret_values if v])
         snapshot["screenshot"] = f"/artifacts/{self.run_id}/{self.phase}/{filename}"
         snapshot["console_errors"] = self.errors[-5:]
-        return snapshot
+        return scrub(snapshot, self.secret_values)
 
     async def act(self, action: Action, snapshot: dict):
         if action.kind == "finish":
@@ -269,7 +275,8 @@ class BrowserTools:
         try:
             if self.context:
                 try:
-                    await self.context.tracing.stop(path=str(self.directory / "trace.zip"))
+                    if self.trace_enabled:
+                        await self.context.tracing.stop(path=str(self.directory / "trace.zip"))
                 finally:
                     await self.context.close()
         finally:

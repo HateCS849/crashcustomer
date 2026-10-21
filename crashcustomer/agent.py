@@ -1,6 +1,8 @@
 import asyncio
 import time
 from typing import TypedDict
+from urllib.parse import urlsplit
+import re
 
 from langgraph.graph import END, START, StateGraph
 
@@ -11,6 +13,7 @@ from .models import CONTRACT, Action
 from .policy import OllamaPolicy, RulePolicy
 from .store import Store, now
 from .tracing import graph_config
+from .secrets import scrub
 
 
 class State(TypedDict, total=False):
@@ -29,7 +32,8 @@ def emit(store: Store, run: dict, node: str, message: str, **detail):
 
 class Target:
     """What one run tests: the built-in demo session or a registered app with injected faults."""
-    def __init__(self, store: Store, run: dict):
+    def __init__(self, store: Store, run: dict, auth_headers=None):
+        self.auth_headers = auth_headers or {}
         self.project = run.get("kind") == "project"
         self.store, self.run = store, run
         self.contract = GENERIC_CONTRACT if self.project else CONTRACT
@@ -45,7 +49,7 @@ class Target:
     def open(self, phase: str) -> BrowserTools:
         directory = self.store.artifacts / self.run["id"] / phase
         if self.project:
-            return BrowserTools(self.run["target_url"], directory, self.run["id"], phase, scope="origin", faults=self.run.get("faults"))
+            return BrowserTools(self.run["target_url"], directory, self.run["id"], phase, scope="origin", faults=self.run.get("faults"), auth_headers=self.auth_headers)
         # A new server-side session resets attempt counters and registrations as well as browser storage.
         token = self.store.create_session(self.run["fault"])
         if phase == "explore":
@@ -126,10 +130,18 @@ async def replay(store: Store, run: dict, target: Target):
                 previous = current
     except Exception as error:
         record["error"] = str(error)[:1500]
-    reproduced = {f["code"] for f in record["findings"]}
+    def signature(f):
+        def path(url):
+            value = urlsplit(url).path
+            return value if target.project else re.sub(r"/api/demo/[^/]+/", "/api/demo/{session}/", value)
+        injected = tuple(sorted({(i.get("method", ""), i.get("path", ""), i.get("mode", "")) for i in f.get("injected", [])}))
+        network = tuple(sorted({(r.get("method", ""), path(r.get("url", "")), r.get("status", 0)) for r in f.get("network", [])}))
+        return f["code"], injected, network
+    reproduced = {signature(f) for f in record["findings"]}
     for finding in run["findings"]:
-        finding["verification"] = "confirmed" if finding["code"] in reproduced else "unconfirmed"
-        finding["replay_after"] = next((f["after"] for f in record["findings"] if f["code"] == finding["code"]), None)
+        finding["verification"] = "confirmed" if signature(finding) in reproduced else "unconfirmed"
+        finding["replay_after"] = next((f["after"] for f in record["findings"] if signature(f) == signature(finding)), None)
+        finding["verification_scope"] = "같은 결함 코드·API·장애 조건의 관찰 재현. 등록 앱의 서버 데이터는 초기화하지 않음." if target.project else "초기화된 데모 세션 재현"
     count = sum(f["verification"] == "confirmed" for f in run["findings"])
     emit(store, run, "replay", f"{len(run['findings'])}건 중 {count}건의 동일 증상을 독립 재현했습니다.")
     run["result"] = "findings_confirmed" if count == len(run["findings"]) else "findings_unconfirmed"
@@ -156,20 +168,21 @@ def report_markdown(run: dict) -> str:
             value = f" → {action['value']}" if action["value"] else ""
             lines.append(f"{i}. {action['kind']} · {action['target']}{value}")
         lines += ["", f"![실행 전]({finding['before']})", f"![실행 후]({finding['after']})", ""]
-    lines += ["## 기록", "", f"[탐색 Trace](/artifacts/{run['id']}/explore/trace.zip)"]
-    if run["replays"]:
+    lines += ["## 기록", "", f"[탐색 Trace](/artifacts/{run['id']}/explore/trace.zip)" if run.get("trace_enabled", True) else "테스트 인증 사용 실행은 인증값 보호를 위해 Trace를 저장하지 않습니다."]
+    if run["replays"] and run.get("trace_enabled", True):
         lines.append(f"[재현 Trace](/artifacts/{run['id']}/replay/trace.zip)")
     return "\n".join(lines) + "\n"
 
 
-async def execute_run(store: Store, run_id: str):
+async def execute_run(store: Store, run_id: str, auth_headers=None):
     run = store.get_run(run_id)
     started = time.monotonic()
     run["status"] = "running"
     emit(store, run, "start", "격리된 브라우저 테스트를 시작합니다.")
     try:
         async with asyncio.timeout(300):
-            target = Target(store, run)
+            target = Target(store, run, auth_headers)
+            run["trace_enabled"] = not bool(auth_headers)
             async with target.open("explore") as browser:
                 graph = build_explorer(store, run, browser, target)
                 config = {**graph_config("crashcustomer.explore", run, kind=run.get("kind", "demo"), scenario=run.get("label")),
@@ -195,6 +208,7 @@ async def execute_run(store: Store, run_id: str):
     finally:
         run["finished_at"] = now()
         run["elapsed_seconds"] = round(time.monotonic() - started, 2)
+        run = scrub(run, [v.removeprefix("Bearer ") for v in (auth_headers or {}).values()])
         store.save_run(run)
         directory = store.artifacts / run_id
         directory.mkdir(exist_ok=True)

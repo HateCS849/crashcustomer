@@ -1,0 +1,6 @@
+{
+  "status": "approval_required",
+  "synthetic_only": true,
+  "configured": false,
+  "message": "외부 전송은 수행하지 않았습니다. 예제 앱의 합성 관찰·문서·모델 출력 전송 승인 후 --allow-synthetic-external-trace로 실행하세요."
+}

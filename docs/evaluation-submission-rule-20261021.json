@@ -1,0 +1,222 @@
+{
+  "backend": "rule",
+  "runs": 12,
+  "passed": 12,
+  "defect_recall": 1.0,
+  "reproduction_rate": 1.0,
+  "false_positives": 0,
+  "execution_errors": 0,
+  "results": [
+    {
+      "repeat": 1,
+      "fault": "healthy",
+      "run_id": "5257b4b84920449689a8d93fcc92523f",
+      "passed": true,
+      "expected": [],
+      "found": [],
+      "verified": [],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.51,
+      "actions": 5
+    },
+    {
+      "repeat": 1,
+      "fault": "reset",
+      "run_id": "9ae8ae2962c4404ea4e8ce280727e583",
+      "passed": true,
+      "expected": [
+        "input_loss"
+      ],
+      "found": [
+        "input_loss"
+      ],
+      "verified": [
+        "input_loss"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 2.48,
+      "actions": 4
+    },
+    {
+      "repeat": 1,
+      "fault": "locked",
+      "run_id": "c595ebec03464a0592c8621fc4b1f4bd",
+      "passed": true,
+      "expected": [
+        "retry_locked"
+      ],
+      "found": [
+        "retry_locked"
+      ],
+      "verified": [
+        "retry_locked"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.92,
+      "actions": 4
+    },
+    {
+      "repeat": 1,
+      "fault": "false_success",
+      "run_id": "038ca221020b4500a537417e577d7308",
+      "passed": true,
+      "expected": [
+        "false_success"
+      ],
+      "found": [
+        "false_success"
+      ],
+      "verified": [
+        "false_success"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.89,
+      "actions": 4
+    },
+    {
+      "repeat": 2,
+      "fault": "healthy",
+      "run_id": "dfcdb1c86a5c46a7b32bb0364dffd8e1",
+      "passed": true,
+      "expected": [],
+      "found": [],
+      "verified": [],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.06,
+      "actions": 5
+    },
+    {
+      "repeat": 2,
+      "fault": "reset",
+      "run_id": "677eb94217b04d63bec16148f14321d9",
+      "passed": true,
+      "expected": [
+        "input_loss"
+      ],
+      "found": [
+        "input_loss"
+      ],
+      "verified": [
+        "input_loss"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.8,
+      "actions": 4
+    },
+    {
+      "repeat": 2,
+      "fault": "locked",
+      "run_id": "ef4860c6521d47b0860206bcdadfc537",
+      "passed": true,
+      "expected": [
+        "retry_locked"
+      ],
+      "found": [
+        "retry_locked"
+      ],
+      "verified": [
+        "retry_locked"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.81,
+      "actions": 4
+    },
+    {
+      "repeat": 2,
+      "fault": "false_success",
+      "run_id": "7eb8c7fadea741f29c292f7122a22257",
+      "passed": true,
+      "expected": [
+        "false_success"
+      ],
+      "found": [
+        "false_success"
+      ],
+      "verified": [
+        "false_success"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.77,
+      "actions": 4
+    },
+    {
+      "repeat": 3,
+      "fault": "healthy",
+      "run_id": "39890369d531421eb226296616104a1a",
+      "passed": true,
+      "expected": [],
+      "found": [],
+      "verified": [],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.15,
+      "actions": 5
+    },
+    {
+      "repeat": 3,
+      "fault": "reset",
+      "run_id": "496cc50231954cbea7eaae573d8cb5dc",
+      "passed": true,
+      "expected": [
+        "input_loss"
+      ],
+      "found": [
+        "input_loss"
+      ],
+      "verified": [
+        "input_loss"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 2.02,
+      "actions": 4
+    },
+    {
+      "repeat": 3,
+      "fault": "locked",
+      "run_id": "0a7dd8ec5b7a401c81f0b6c86eccb4f2",
+      "passed": true,
+      "expected": [
+        "retry_locked"
+      ],
+      "found": [
+        "retry_locked"
+      ],
+      "verified": [
+        "retry_locked"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.83,
+      "actions": 4
+    },
+    {
+      "repeat": 3,
+      "fault": "false_success",
+      "run_id": "610776dd50274f11a2c98f82bb1e188c",
+      "passed": true,
+      "expected": [
+        "false_success"
+      ],
+      "found": [
+        "false_success"
+      ],
+      "verified": [
+        "false_success"
+      ],
+      "status": "completed",
+      "error": null,
+      "seconds": 1.89,
+      "actions": 4
+    }
+  ],
+  "scope": "Controlled synthetic form, fixed transient-failure scenario; not real-world generalization."
+}

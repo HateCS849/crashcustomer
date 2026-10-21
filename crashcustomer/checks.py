@@ -174,9 +174,9 @@ def check_resilience(previous: dict | None, current: dict, action: dict | None) 
     duplicated = [(key, n) for key, n in accepted.items() if n > 1]
     if duplicated:
         (method, path), n = duplicated[0]
-        findings.append(finding(common, "duplicate_processing", "high", "같은 요청을 서버가 중복 처리",
+        findings.append(finding(common, "duplicate_processing", "high", "같은 변경 요청의 중복 성공 응답",
                                 "같은 사용자 동작은 서버에서 한 번만 처리되어야 합니다(멱등성).",
-                                f"한 번의 제출 동작에서 {method} {path} 요청이 {n}번 성공 처리되었습니다."))
+                                f"한 번의 제출 동작에서 {method} {path} 요청이 {n}번 2xx 응답을 받았습니다. 실제 데이터 중복 생성은 별도 검증이 필요합니다."))
     if current.get("busy_timeout"):
         findings.append(finding(common, "stuck_loading", "medium", "끝나지 않는 로딩 상태",
                                 "요청이 실패하거나 지연되어도 로딩 표시는 종료되어야 합니다.",

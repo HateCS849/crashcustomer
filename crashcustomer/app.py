@@ -18,6 +18,8 @@ from .lab import LabManager, LabRequest, lab_report
 from .campaign import CampaignManager, CampaignRequest, campaign_report
 from .targets import TargetError, allowed_hosts, check_target, health_check
 from .tracing import tracing_status
+from .events import stream_records
+from .routing import route_goal
 
 store = Store(DATA_DIR)
 tasks: set[asyncio.Task] = set()
@@ -43,6 +45,49 @@ async def lifespan(app):
 app = FastAPI(title="CrashCustomer", version="0.1.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 app.mount("/artifacts", StaticFiles(directory=store.artifacts), name="artifacts")
+
+
+@app.get("/api/events/{kind}/{record_id}")
+async def live_events(kind: str, record_id: str, request: Request):
+    methods = {"runs": store.get_run, "campaigns": store.get_campaign, "lab": store.get_experiment}
+    if kind not in methods or not methods[kind](record_id):
+        raise HTTPException(404, "실행 기록이 없습니다.")
+    def record():
+        value = methods[kind](record_id)
+        if kind == "campaigns" and value and value.get("status") == "running" and value.get("run_ids"):
+            child = store.get_run(value["run_ids"][-1])
+            if child:
+                value["active_run"] = {"id": child["id"], "status": child["status"], "events": child["events"][-8:], "usage": child["usage"]}
+        return value
+    return stream_records(request, record)
+
+
+@app.post("/api/assistant/route")
+async def assistant_route(request: dict):
+    message = request.get("message", "")
+    if not isinstance(message, str) or not 1 <= len(message) <= 1500:
+        raise HTTPException(422, "입력은 1~1500자여야 합니다.")
+    return route_goal(message)
+
+
+@app.get("/api/tracing/status")
+def trace_status():
+    return tracing_status()
+
+
+@app.post("/api/tracing/verify")
+async def trace_verify():
+    from .tracing import verify_delivery
+    return await verify_delivery(store.directory)
+
+
+@app.post("/api/tracing/campaigns/{campaign_id}/verify")
+async def campaign_trace_verify(campaign_id: str):
+    from .tracing import verify_campaign_delivery
+    campaign = require_campaign(campaign_id)
+    if campaign["status"] in {"queued", "running"}:
+        raise HTTPException(409, "캠페인 종료 후 실제 추적을 검증해주세요.")
+    return await verify_campaign_delivery(store.directory, campaign)
 
 
 @app.middleware("http")

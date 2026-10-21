@@ -1,0 +1,2274 @@
+{
+  "complete": true,
+  "model": "qwen3:8b",
+  "source_campaign": "8ac4fce6bc434ddc8097c03fee07e028",
+  "goal": "원두 정기배송 주문 양식을 작성해 주문을 완료해줘.",
+  "candidates": [
+    {
+      "candidate_id": "c0",
+      "method": "GET",
+      "path": "/api/fixed/stock",
+      "fault": "status_503",
+      "label": "GET /api/fixed/stock · HTTP 503 응답"
+    },
+    {
+      "candidate_id": "c1",
+      "method": "GET",
+      "path": "/api/fixed/stock",
+      "fault": "delay",
+      "label": "GET /api/fixed/stock · 3초 지연"
+    },
+    {
+      "candidate_id": "c2",
+      "method": "GET",
+      "path": "/api/fixed/stock",
+      "fault": "status_401",
+      "label": "GET /api/fixed/stock · HTTP 401 인증 만료"
+    },
+    {
+      "candidate_id": "c3",
+      "method": "GET",
+      "path": "/api/fixed/stock",
+      "fault": "status_429",
+      "label": "GET /api/fixed/stock · HTTP 429 요청 제한"
+    },
+    {
+      "candidate_id": "c4",
+      "method": "GET",
+      "path": "/api/fixed/stock",
+      "fault": "mutate",
+      "label": "GET /api/fixed/stock · 응답 형식 변경"
+    },
+    {
+      "candidate_id": "c5",
+      "method": "GET",
+      "path": "/api/fixed/stock",
+      "fault": "persistent_503",
+      "label": "GET /api/fixed/stock · 연속 503 (12회)"
+    },
+    {
+      "candidate_id": "c6",
+      "method": "GET",
+      "path": "/api/fixed/stock",
+      "fault": "status_500",
+      "label": "GET /api/fixed/stock · HTTP 500 응답"
+    },
+    {
+      "candidate_id": "c7",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "status_503",
+      "label": "POST /api/fixed/orders · HTTP 503 응답"
+    },
+    {
+      "candidate_id": "c8",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "abort",
+      "label": "POST /api/fixed/orders · 연결 끊김"
+    },
+    {
+      "candidate_id": "c9",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "delay",
+      "label": "POST /api/fixed/orders · 3초 지연"
+    },
+    {
+      "candidate_id": "c10",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "status_401",
+      "label": "POST /api/fixed/orders · HTTP 401 인증 만료"
+    },
+    {
+      "candidate_id": "c11",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "status_429",
+      "label": "POST /api/fixed/orders · HTTP 429 요청 제한"
+    },
+    {
+      "candidate_id": "c12",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "mutate",
+      "label": "POST /api/fixed/orders · 응답 형식 변경"
+    },
+    {
+      "candidate_id": "c13",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "duplicate",
+      "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭"
+    },
+    {
+      "candidate_id": "c14",
+      "method": "POST",
+      "path": "/api/fixed/orders",
+      "fault": "status_500",
+      "label": "POST /api/fixed/orders · HTTP 500 응답"
+    },
+    {
+      "candidate_id": "c15",
+      "method": "*",
+      "path": "*",
+      "fault": "slow_network",
+      "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)"
+    },
+    {
+      "candidate_id": "c16",
+      "method": "GET",
+      "path": "*",
+      "fault": "asset_block",
+      "label": "화면 전체 · 스크립트·스타일 로딩 실패"
+    }
+  ],
+  "references": [
+    {
+      "source": "shop-openapi.yaml",
+      "kind": "openapi",
+      "text": "GET /api/{variant}/stock 남은 원두 수량 조회 (화면 진입 시 호출, 재고 DB 잠금 사용) 필수: variant",
+      "score": 1.022,
+      "method": "bm25"
+    },
+    {
+      "source": "shop-runbook.md",
+      "kind": "reference",
+      "text": "# Sample Shop 운영 메모\n\n## 주문 API 장애 이력\n\n주문 생성(POST /api/{variant}/orders)은 결제 대행사를 동기 호출합니다. 대행사 점검 시간에는 503이 간헐적으로 발생하고, 피크 시간에는 응답이 3초 이상 지연됩니다.\n\n지연 중 고객이 주문 버튼을 여러 번 눌러 중복 결제가 발생한 문의가 있었습니다.\n\n## 모바일 네트워크\n\n지하철 구간 등에서 요청이 중간에 끊기는 경우가 있습니다. 이때 화면이 아무 반응 없이 멈췄다는 문의가 반복됩니다.\n\n## 재고 조회\n\n화면 진입 시 재고 API(GET /api/{variant}/stock)를 호출합니다. 재고 DB 잠금 때문에 이벤트 시간대 동시 접속이 몰리면 응답이 수 초까지 느려진 적이 있습니다.\n\n## 배포\n\n배포 직후 정적 파일(JS) 캐시가 갱신되지 않아 구버전 화면이 새 API 응답 형식을 해석하지 못한 사례가 있습니다. 로그인 세션은 재배포 시 만료됩니다.\n\n## 기타\n\n누적 주문 수 AP",
+      "score": 0.777,
+      "method": "bm25"
+    },
+    {
+      "source": "shop-openapi.yaml",
+      "kind": "openapi",
+      "text": "GET /api/orders/count 누적 주문 수",
+      "score": 0.595,
+      "method": "bm25"
+    },
+    {
+      "source": "shop-openapi.yaml",
+      "kind": "openapi",
+      "text": "POST /api/{variant}/orders 원두 정기배송 주문 생성 (결제 대행사 호출 포함) 필수: variant",
+      "score": 0.532,
+      "method": "bm25"
+    }
+  ],
+  "repeats": 3,
+  "results": [
+    {
+      "repeat": 1,
+      "mode": "one_pass",
+      "attempts": [
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "persistent_503",
+              "status_503",
+              "abort",
+              "status_401",
+              "duplicate",
+              "status_500",
+              "slow_network",
+              "asset_block",
+              "mutate"
+            ],
+            "missing": [
+              "delay",
+              "status_429"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "재고 조회 API의 지속적인 503 오류는 시스템 전체에 영향을 미치는 중대한 장애"
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 API의 503 오류는 주문 처리가 중단되어 사용자 피해가 큽니다"
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "주문 생성 중 연결 끊김은 주문이 완전히 실패할 수 있는 심각한 문제"
+            },
+            {
+              "candidate_id": "c10",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_401",
+              "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+              "reason": "주문 생성 시 인증 만료는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c13",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "duplicate",
+              "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+              "reason": "주문 지연 중 두 번 클릭은 중복 주문 및 결제 오류로 이어질 수 있습니다"
+            },
+            {
+              "candidate_id": "c14",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_500",
+              "label": "POST /api/fixed/orders · HTTP 500 응답",
+              "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c15",
+              "method": "*",
+              "path": "*",
+              "fault": "slow_network",
+              "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+              "reason": "전체 화면 지연은 사용자 경험에 큰 영향을 미치는 심각한 네트워크 장애"
+            },
+            {
+              "candidate_id": "c16",
+              "method": "GET",
+              "path": "*",
+              "fault": "asset_block",
+              "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+              "reason": "정적 파일 로딩 실패는 사용자 화면이 정상적으로 표시되지 않아 사용자 피해가 큽니다"
+            },
+            {
+              "candidate_id": "c2",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_401",
+              "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+              "reason": "인증 만료로 인한 주문 실패는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c4",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "mutate",
+              "label": "GET /api/fixed/stock · 응답 형식 변경",
+              "reason": "응답 형식 변경은 프론트엔드가 응답을 올바르게 해석하지 못해 사용자 경험 저하"
+            },
+            {
+              "candidate_id": "c6",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_500",
+              "label": "GET /api/fixed/stock · HTTP 500 응답",
+              "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "calls": 1,
+        "input_tokens": 1810,
+        "output_tokens": 494
+      },
+      "ms": 26517.89,
+      "final_plan": [
+        {
+          "candidate_id": "c5",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "persistent_503",
+          "label": "GET /api/fixed/stock · 연속 503 (12회)",
+          "reason": "재고 조회 API의 지속적인 503 오류는 시스템 전체에 영향을 미치는 중대한 장애"
+        },
+        {
+          "candidate_id": "c7",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_503",
+          "label": "POST /api/fixed/orders · HTTP 503 응답",
+          "reason": "주문 생성 API의 503 오류는 주문 처리가 중단되어 사용자 피해가 큽니다"
+        },
+        {
+          "candidate_id": "c8",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "abort",
+          "label": "POST /api/fixed/orders · 연결 끊김",
+          "reason": "주문 생성 중 연결 끊김은 주문이 완전히 실패할 수 있는 심각한 문제"
+        },
+        {
+          "candidate_id": "c10",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_401",
+          "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+          "reason": "주문 생성 시 인증 만료는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c13",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "duplicate",
+          "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+          "reason": "주문 지연 중 두 번 클릭은 중복 주문 및 결제 오류로 이어질 수 있습니다"
+        },
+        {
+          "candidate_id": "c14",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_500",
+          "label": "POST /api/fixed/orders · HTTP 500 응답",
+          "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c15",
+          "method": "*",
+          "path": "*",
+          "fault": "slow_network",
+          "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+          "reason": "전체 화면 지연은 사용자 경험에 큰 영향을 미치는 심각한 네트워크 장애"
+        },
+        {
+          "candidate_id": "c16",
+          "method": "GET",
+          "path": "*",
+          "fault": "asset_block",
+          "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+          "reason": "정적 파일 로딩 실패는 사용자 화면이 정상적으로 표시되지 않아 사용자 피해가 큽니다"
+        },
+        {
+          "candidate_id": "c2",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_401",
+          "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+          "reason": "인증 만료로 인한 주문 실패는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c4",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "mutate",
+          "label": "GET /api/fixed/stock · 응답 형식 변경",
+          "reason": "응답 형식 변경은 프론트엔드가 응답을 올바르게 해석하지 못해 사용자 경험 저하"
+        },
+        {
+          "candidate_id": "c6",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_500",
+          "label": "GET /api/fixed/stock · HTTP 500 응답",
+          "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+        }
+      ],
+      "coverage": {
+        "available": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "required": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "planned": [
+          "persistent_503",
+          "status_503",
+          "abort",
+          "status_401",
+          "duplicate",
+          "status_500",
+          "slow_network",
+          "asset_block",
+          "mutate"
+        ],
+        "missing": [
+          "delay",
+          "status_429"
+        ],
+        "out_of_budget": []
+      },
+      "repaired": false
+    },
+    {
+      "repeat": 1,
+      "mode": "validated",
+      "attempts": [
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "abort"
+            ],
+            "missing": [
+              "status_500",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c0",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_503",
+              "label": "GET /api/fixed/stock · HTTP 503 응답",
+              "reason": "재고 조회 API가 503 오류로 작동하지 않으면 주문 시 재고 정보 확인이 불가능해 주문 실패로 이어짐"
+            },
+            {
+              "candidate_id": "c1",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "delay",
+              "label": "GET /api/fixed/stock · 3초 지연",
+              "reason": "재고 조회 지연은 주문 시 고객이 주문 버튼을 여러 번 클릭해 중복 주문 발생 가능성 있음"
+            },
+            {
+              "candidate_id": "c2",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_401",
+              "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+              "reason": "인증 만료 시 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c3",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_429",
+              "label": "GET /api/fixed/stock · HTTP 429 요청 제한",
+              "reason": "요청 제한으로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c4",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "mutate",
+              "label": "GET /api/fixed/stock · 응답 형식 변경",
+              "reason": "응답 형식 변경으로 인해 주문 처리 시 데이터 해석 오류 발생"
+            },
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "지속적인 503 오류로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 API가 503 오류로 작동하지 않으면 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "연결 끊김으로 인해 주문 요청이 중단되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c9",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "delay",
+              "label": "POST /api/fixed/orders · 3초 지연",
+              "reason": "주문 생성 지연은 고객이 주문 버튼을 여러 번 클릭해 중복 주문 발생 가능성 있음"
+            },
+            {
+              "candidate_id": "c10",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_401",
+              "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+              "reason": "인증 만료 시 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c11",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_429",
+              "label": "POST /api/fixed/orders · HTTP 429 요청 제한",
+              "reason": "요청 제한으로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            }
+          ]
+        },
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "status_500",
+              "duplicate",
+              "slow_network",
+              "asset_block",
+              "delay",
+              "status_503",
+              "abort",
+              "persistent_503"
+            ],
+            "missing": [
+              "status_401",
+              "status_429",
+              "mutate"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c6",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_500",
+              "label": "GET /api/fixed/stock · HTTP 500 응답",
+              "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c13",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "duplicate",
+              "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+              "reason": "중복 주문은 결제 오류 및 재고 부족으로 인해 사용자 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c15",
+              "method": "*",
+              "path": "*",
+              "fault": "slow_network",
+              "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+              "reason": "느린 네트워크는 주문 전송 지연 및 사용자 경험 저하로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c16",
+              "method": "GET",
+              "path": "*",
+              "fault": "asset_block",
+              "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+              "reason": "정적 파일 로딩 실패는 UI 표시 오류로 인해 주문 시스템 사용이 불가능해집니다."
+            },
+            {
+              "candidate_id": "c1",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "delay",
+              "label": "GET /api/fixed/stock · 3초 지연",
+              "reason": "재고 조회 지연은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c9",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "delay",
+              "label": "POST /api/fixed/orders · 3초 지연",
+              "reason": "주문 요청 지연은 사용자가 주문 버튼을 여러 번 클릭해 중복 주문으로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 시 503 응답은 주문 처리가 중단되어 사용자 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "연결 끊김은 주문 요청이 전송되지 않아 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c0",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_503",
+              "label": "GET /api/fixed/stock · HTTP 503 응답",
+              "reason": "재고 조회 시 503 응답은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "연속 503 응답은 주문 시스템이 장애 상태로 전환되어 사용자 주문이 중단될 수 있습니다."
+            },
+            {
+              "candidate_id": "c14",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_500",
+              "label": "POST /api/fixed/orders · HTTP 500 응답",
+              "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "calls": 2,
+        "input_tokens": 3833,
+        "output_tokens": 1043
+      },
+      "ms": 55832.86,
+      "final_plan": [
+        {
+          "candidate_id": "c7",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_503",
+          "label": "POST /api/fixed/orders · HTTP 503 응답",
+          "reason": "주문 생성 시 503 응답은 주문 처리가 중단되어 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c1",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "delay",
+          "label": "GET /api/fixed/stock · 3초 지연",
+          "reason": "재고 조회 지연은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c2",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_401",
+          "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c3",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_429",
+          "label": "GET /api/fixed/stock · HTTP 429 요청 제한",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c4",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "mutate",
+          "label": "GET /api/fixed/stock · 응답 형식 변경",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c5",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "persistent_503",
+          "label": "GET /api/fixed/stock · 연속 503 (12회)",
+          "reason": "연속 503 응답은 주문 시스템이 장애 상태로 전환되어 사용자 주문이 중단될 수 있습니다."
+        },
+        {
+          "candidate_id": "c6",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_500",
+          "label": "GET /api/fixed/stock · HTTP 500 응답",
+          "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c8",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "abort",
+          "label": "POST /api/fixed/orders · 연결 끊김",
+          "reason": "연결 끊김은 주문 요청이 전송되지 않아 주문 실패로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c13",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "duplicate",
+          "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+          "reason": "중복 주문은 결제 오류 및 재고 부족으로 인해 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c15",
+          "method": "*",
+          "path": "*",
+          "fault": "slow_network",
+          "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+          "reason": "느린 네트워크는 주문 전송 지연 및 사용자 경험 저하로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c16",
+          "method": "GET",
+          "path": "*",
+          "fault": "asset_block",
+          "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+          "reason": "정적 파일 로딩 실패는 UI 표시 오류로 인해 주문 시스템 사용이 불가능해집니다."
+        }
+      ],
+      "coverage": {
+        "available": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "required": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "planned": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "missing": [],
+        "out_of_budget": []
+      },
+      "repaired": true
+    },
+    {
+      "repeat": 2,
+      "mode": "validated",
+      "attempts": [
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "abort"
+            ],
+            "missing": [
+              "status_500",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c0",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_503",
+              "label": "GET /api/fixed/stock · HTTP 503 응답",
+              "reason": "재고 조회 API가 503 오류로 작동하지 않으면 주문 시 재고 정보 확인이 불가능해 주문 실패로 이어짐"
+            },
+            {
+              "candidate_id": "c1",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "delay",
+              "label": "GET /api/fixed/stock · 3초 지연",
+              "reason": "재고 조회 지연은 주문 시 고객이 주문 버튼을 여러 번 클릭해 중복 주문 발생 가능성 있음"
+            },
+            {
+              "candidate_id": "c2",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_401",
+              "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+              "reason": "인증 만료 시 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c3",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_429",
+              "label": "GET /api/fixed/stock · HTTP 429 요청 제한",
+              "reason": "요청 제한으로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c4",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "mutate",
+              "label": "GET /api/fixed/stock · 응답 형식 변경",
+              "reason": "응답 형식 변경으로 인해 주문 처리 시 데이터 해석 오류 발생"
+            },
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "지속적인 503 오류로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 API가 503 오류로 작동하지 않으면 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "연결 끊김으로 인해 주문 요청이 중단되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c9",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "delay",
+              "label": "POST /api/fixed/orders · 3초 지연",
+              "reason": "주문 생성 지연은 고객이 주문 버튼을 여러 번 클릭해 중복 주문 발생 가능성 있음"
+            },
+            {
+              "candidate_id": "c10",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_401",
+              "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+              "reason": "인증 만료 시 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c11",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_429",
+              "label": "POST /api/fixed/orders · HTTP 429 요청 제한",
+              "reason": "요청 제한으로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            }
+          ]
+        },
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "status_500",
+              "duplicate",
+              "slow_network",
+              "asset_block",
+              "delay",
+              "status_503",
+              "abort",
+              "persistent_503"
+            ],
+            "missing": [
+              "status_401",
+              "status_429",
+              "mutate"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c6",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_500",
+              "label": "GET /api/fixed/stock · HTTP 500 응답",
+              "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c13",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "duplicate",
+              "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+              "reason": "중복 주문은 결제 오류 및 재고 부족으로 인해 사용자 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c15",
+              "method": "*",
+              "path": "*",
+              "fault": "slow_network",
+              "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+              "reason": "느린 네트워크는 주문 전송 지연 및 사용자 경험 저하로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c16",
+              "method": "GET",
+              "path": "*",
+              "fault": "asset_block",
+              "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+              "reason": "정적 파일 로딩 실패는 UI 표시 오류로 인해 주문 시스템 사용이 불가능해집니다."
+            },
+            {
+              "candidate_id": "c1",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "delay",
+              "label": "GET /api/fixed/stock · 3초 지연",
+              "reason": "재고 조회 지연은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c9",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "delay",
+              "label": "POST /api/fixed/orders · 3초 지연",
+              "reason": "주문 요청 지연은 사용자가 주문 버튼을 여러 번 클릭해 중복 주문으로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 시 503 응답은 주문 처리가 중단되어 사용자 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "연결 끊김은 주문 요청이 전송되지 않아 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c0",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_503",
+              "label": "GET /api/fixed/stock · HTTP 503 응답",
+              "reason": "재고 조회 시 503 응답은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "연속 503 응답은 주문 시스템이 장애 상태로 전환되어 사용자 주문이 중단될 수 있습니다."
+            },
+            {
+              "candidate_id": "c14",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_500",
+              "label": "POST /api/fixed/orders · HTTP 500 응답",
+              "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "calls": 2,
+        "input_tokens": 3833,
+        "output_tokens": 1043
+      },
+      "ms": 49998.83,
+      "final_plan": [
+        {
+          "candidate_id": "c7",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_503",
+          "label": "POST /api/fixed/orders · HTTP 503 응답",
+          "reason": "주문 생성 시 503 응답은 주문 처리가 중단되어 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c1",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "delay",
+          "label": "GET /api/fixed/stock · 3초 지연",
+          "reason": "재고 조회 지연은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c2",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_401",
+          "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c3",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_429",
+          "label": "GET /api/fixed/stock · HTTP 429 요청 제한",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c4",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "mutate",
+          "label": "GET /api/fixed/stock · 응답 형식 변경",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c5",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "persistent_503",
+          "label": "GET /api/fixed/stock · 연속 503 (12회)",
+          "reason": "연속 503 응답은 주문 시스템이 장애 상태로 전환되어 사용자 주문이 중단될 수 있습니다."
+        },
+        {
+          "candidate_id": "c6",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_500",
+          "label": "GET /api/fixed/stock · HTTP 500 응답",
+          "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c8",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "abort",
+          "label": "POST /api/fixed/orders · 연결 끊김",
+          "reason": "연결 끊김은 주문 요청이 전송되지 않아 주문 실패로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c13",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "duplicate",
+          "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+          "reason": "중복 주문은 결제 오류 및 재고 부족으로 인해 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c15",
+          "method": "*",
+          "path": "*",
+          "fault": "slow_network",
+          "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+          "reason": "느린 네트워크는 주문 전송 지연 및 사용자 경험 저하로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c16",
+          "method": "GET",
+          "path": "*",
+          "fault": "asset_block",
+          "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+          "reason": "정적 파일 로딩 실패는 UI 표시 오류로 인해 주문 시스템 사용이 불가능해집니다."
+        }
+      ],
+      "coverage": {
+        "available": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "required": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "planned": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "missing": [],
+        "out_of_budget": []
+      },
+      "repaired": true
+    },
+    {
+      "repeat": 2,
+      "mode": "one_pass",
+      "attempts": [
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "persistent_503",
+              "status_503",
+              "abort",
+              "status_401",
+              "duplicate",
+              "status_500",
+              "slow_network",
+              "asset_block",
+              "mutate"
+            ],
+            "missing": [
+              "delay",
+              "status_429"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "재고 조회 API의 지속적인 503 오류는 시스템 전체에 영향을 미치는 중대한 장애"
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 API의 503 오류는 주문 처리가 중단되어 사용자 피해가 큽니다"
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "주문 생성 중 연결 끊김은 주문이 완전히 실패할 수 있는 심각한 문제"
+            },
+            {
+              "candidate_id": "c10",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_401",
+              "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+              "reason": "주문 생성 시 인증 만료는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c13",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "duplicate",
+              "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+              "reason": "주문 지연 중 두 번 클릭은 중복 주문 및 결제 오류로 이어질 수 있습니다"
+            },
+            {
+              "candidate_id": "c14",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_500",
+              "label": "POST /api/fixed/orders · HTTP 500 응답",
+              "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c15",
+              "method": "*",
+              "path": "*",
+              "fault": "slow_network",
+              "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+              "reason": "전체 화면 지연은 사용자 경험에 큰 영향을 미치는 심각한 네트워크 장애"
+            },
+            {
+              "candidate_id": "c16",
+              "method": "GET",
+              "path": "*",
+              "fault": "asset_block",
+              "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+              "reason": "정적 파일 로딩 실패는 사용자 화면이 정상적으로 표시되지 않아 사용자 피해가 큽니다"
+            },
+            {
+              "candidate_id": "c2",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_401",
+              "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+              "reason": "인증 만료로 인한 주문 실패는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c4",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "mutate",
+              "label": "GET /api/fixed/stock · 응답 형식 변경",
+              "reason": "응답 형식 변경은 프론트엔드가 응답을 올바르게 해석하지 못해 사용자 경험 저하"
+            },
+            {
+              "candidate_id": "c6",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_500",
+              "label": "GET /api/fixed/stock · HTTP 500 응답",
+              "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "calls": 1,
+        "input_tokens": 1810,
+        "output_tokens": 494
+      },
+      "ms": 26176.22,
+      "final_plan": [
+        {
+          "candidate_id": "c5",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "persistent_503",
+          "label": "GET /api/fixed/stock · 연속 503 (12회)",
+          "reason": "재고 조회 API의 지속적인 503 오류는 시스템 전체에 영향을 미치는 중대한 장애"
+        },
+        {
+          "candidate_id": "c7",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_503",
+          "label": "POST /api/fixed/orders · HTTP 503 응답",
+          "reason": "주문 생성 API의 503 오류는 주문 처리가 중단되어 사용자 피해가 큽니다"
+        },
+        {
+          "candidate_id": "c8",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "abort",
+          "label": "POST /api/fixed/orders · 연결 끊김",
+          "reason": "주문 생성 중 연결 끊김은 주문이 완전히 실패할 수 있는 심각한 문제"
+        },
+        {
+          "candidate_id": "c10",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_401",
+          "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+          "reason": "주문 생성 시 인증 만료는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c13",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "duplicate",
+          "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+          "reason": "주문 지연 중 두 번 클릭은 중복 주문 및 결제 오류로 이어질 수 있습니다"
+        },
+        {
+          "candidate_id": "c14",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_500",
+          "label": "POST /api/fixed/orders · HTTP 500 응답",
+          "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c15",
+          "method": "*",
+          "path": "*",
+          "fault": "slow_network",
+          "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+          "reason": "전체 화면 지연은 사용자 경험에 큰 영향을 미치는 심각한 네트워크 장애"
+        },
+        {
+          "candidate_id": "c16",
+          "method": "GET",
+          "path": "*",
+          "fault": "asset_block",
+          "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+          "reason": "정적 파일 로딩 실패는 사용자 화면이 정상적으로 표시되지 않아 사용자 피해가 큽니다"
+        },
+        {
+          "candidate_id": "c2",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_401",
+          "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+          "reason": "인증 만료로 인한 주문 실패는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c4",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "mutate",
+          "label": "GET /api/fixed/stock · 응답 형식 변경",
+          "reason": "응답 형식 변경은 프론트엔드가 응답을 올바르게 해석하지 못해 사용자 경험 저하"
+        },
+        {
+          "candidate_id": "c6",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_500",
+          "label": "GET /api/fixed/stock · HTTP 500 응답",
+          "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+        }
+      ],
+      "coverage": {
+        "available": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "required": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "planned": [
+          "persistent_503",
+          "status_503",
+          "abort",
+          "status_401",
+          "duplicate",
+          "status_500",
+          "slow_network",
+          "asset_block",
+          "mutate"
+        ],
+        "missing": [
+          "delay",
+          "status_429"
+        ],
+        "out_of_budget": []
+      },
+      "repaired": false
+    },
+    {
+      "repeat": 3,
+      "mode": "one_pass",
+      "attempts": [
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "persistent_503",
+              "status_503",
+              "abort",
+              "status_401",
+              "duplicate",
+              "status_500",
+              "slow_network",
+              "asset_block",
+              "mutate"
+            ],
+            "missing": [
+              "delay",
+              "status_429"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "재고 조회 API의 지속적인 503 오류는 시스템 전체에 영향을 미치는 중대한 장애"
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 API의 503 오류는 주문 처리가 중단되어 사용자 피해가 큽니다"
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "주문 생성 중 연결 끊김은 주문이 완전히 실패할 수 있는 심각한 문제"
+            },
+            {
+              "candidate_id": "c10",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_401",
+              "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+              "reason": "주문 생성 시 인증 만료는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c13",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "duplicate",
+              "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+              "reason": "주문 지연 중 두 번 클릭은 중복 주문 및 결제 오류로 이어질 수 있습니다"
+            },
+            {
+              "candidate_id": "c14",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_500",
+              "label": "POST /api/fixed/orders · HTTP 500 응답",
+              "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c15",
+              "method": "*",
+              "path": "*",
+              "fault": "slow_network",
+              "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+              "reason": "전체 화면 지연은 사용자 경험에 큰 영향을 미치는 심각한 네트워크 장애"
+            },
+            {
+              "candidate_id": "c16",
+              "method": "GET",
+              "path": "*",
+              "fault": "asset_block",
+              "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+              "reason": "정적 파일 로딩 실패는 사용자 화면이 정상적으로 표시되지 않아 사용자 피해가 큽니다"
+            },
+            {
+              "candidate_id": "c2",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_401",
+              "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+              "reason": "인증 만료로 인한 주문 실패는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+            },
+            {
+              "candidate_id": "c4",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "mutate",
+              "label": "GET /api/fixed/stock · 응답 형식 변경",
+              "reason": "응답 형식 변경은 프론트엔드가 응답을 올바르게 해석하지 못해 사용자 경험 저하"
+            },
+            {
+              "candidate_id": "c6",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_500",
+              "label": "GET /api/fixed/stock · HTTP 500 응답",
+              "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "calls": 1,
+        "input_tokens": 1810,
+        "output_tokens": 494
+      },
+      "ms": 23069.07,
+      "final_plan": [
+        {
+          "candidate_id": "c5",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "persistent_503",
+          "label": "GET /api/fixed/stock · 연속 503 (12회)",
+          "reason": "재고 조회 API의 지속적인 503 오류는 시스템 전체에 영향을 미치는 중대한 장애"
+        },
+        {
+          "candidate_id": "c7",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_503",
+          "label": "POST /api/fixed/orders · HTTP 503 응답",
+          "reason": "주문 생성 API의 503 오류는 주문 처리가 중단되어 사용자 피해가 큽니다"
+        },
+        {
+          "candidate_id": "c8",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "abort",
+          "label": "POST /api/fixed/orders · 연결 끊김",
+          "reason": "주문 생성 중 연결 끊김은 주문이 완전히 실패할 수 있는 심각한 문제"
+        },
+        {
+          "candidate_id": "c10",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_401",
+          "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+          "reason": "주문 생성 시 인증 만료는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c13",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "duplicate",
+          "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+          "reason": "주문 지연 중 두 번 클릭은 중복 주문 및 결제 오류로 이어질 수 있습니다"
+        },
+        {
+          "candidate_id": "c14",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_500",
+          "label": "POST /api/fixed/orders · HTTP 500 응답",
+          "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c15",
+          "method": "*",
+          "path": "*",
+          "fault": "slow_network",
+          "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+          "reason": "전체 화면 지연은 사용자 경험에 큰 영향을 미치는 심각한 네트워크 장애"
+        },
+        {
+          "candidate_id": "c16",
+          "method": "GET",
+          "path": "*",
+          "fault": "asset_block",
+          "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+          "reason": "정적 파일 로딩 실패는 사용자 화면이 정상적으로 표시되지 않아 사용자 피해가 큽니다"
+        },
+        {
+          "candidate_id": "c2",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_401",
+          "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+          "reason": "인증 만료로 인한 주문 실패는 사용자 로그인 상태가 무효화되어 주문이 실패할 수 있습니다"
+        },
+        {
+          "candidate_id": "c4",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "mutate",
+          "label": "GET /api/fixed/stock · 응답 형식 변경",
+          "reason": "응답 형식 변경은 프론트엔드가 응답을 올바르게 해석하지 못해 사용자 경험 저하"
+        },
+        {
+          "candidate_id": "c6",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_500",
+          "label": "GET /api/fixed/stock · HTTP 500 응답",
+          "reason": "주문 생성 시 500 오류는 시스템 내부 오류로 사용자 주문이 완전히 실패할 수 있습니다"
+        }
+      ],
+      "coverage": {
+        "available": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "required": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "planned": [
+          "persistent_503",
+          "status_503",
+          "abort",
+          "status_401",
+          "duplicate",
+          "status_500",
+          "slow_network",
+          "asset_block",
+          "mutate"
+        ],
+        "missing": [
+          "delay",
+          "status_429"
+        ],
+        "out_of_budget": []
+      },
+      "repaired": false
+    },
+    {
+      "repeat": 3,
+      "mode": "validated",
+      "attempts": [
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "abort"
+            ],
+            "missing": [
+              "status_500",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c0",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_503",
+              "label": "GET /api/fixed/stock · HTTP 503 응답",
+              "reason": "재고 조회 API가 503 오류로 작동하지 않으면 주문 시 재고 정보 확인이 불가능해 주문 실패로 이어짐"
+            },
+            {
+              "candidate_id": "c1",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "delay",
+              "label": "GET /api/fixed/stock · 3초 지연",
+              "reason": "재고 조회 지연은 주문 시 고객이 주문 버튼을 여러 번 클릭해 중복 주문 발생 가능성 있음"
+            },
+            {
+              "candidate_id": "c2",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_401",
+              "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+              "reason": "인증 만료 시 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c3",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_429",
+              "label": "GET /api/fixed/stock · HTTP 429 요청 제한",
+              "reason": "요청 제한으로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c4",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "mutate",
+              "label": "GET /api/fixed/stock · 응답 형식 변경",
+              "reason": "응답 형식 변경으로 인해 주문 처리 시 데이터 해석 오류 발생"
+            },
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "지속적인 503 오류로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 API가 503 오류로 작동하지 않으면 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "연결 끊김으로 인해 주문 요청이 중단되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c9",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "delay",
+              "label": "POST /api/fixed/orders · 3초 지연",
+              "reason": "주문 생성 지연은 고객이 주문 버튼을 여러 번 클릭해 중복 주문 발생 가능성 있음"
+            },
+            {
+              "candidate_id": "c10",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_401",
+              "label": "POST /api/fixed/orders · HTTP 401 인증 만료",
+              "reason": "인증 만료 시 주문 요청이 거절되어 주문이 완료되지 않음"
+            },
+            {
+              "candidate_id": "c11",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_429",
+              "label": "POST /api/fixed/orders · HTTP 429 요청 제한",
+              "reason": "요청 제한으로 인해 주문 요청이 거절되어 주문이 완료되지 않음"
+            }
+          ]
+        },
+        {
+          "coverage": {
+            "available": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "required": [
+              "status_503",
+              "delay",
+              "status_401",
+              "status_429",
+              "mutate",
+              "persistent_503",
+              "status_500",
+              "abort",
+              "duplicate",
+              "slow_network",
+              "asset_block"
+            ],
+            "planned": [
+              "status_500",
+              "duplicate",
+              "slow_network",
+              "asset_block",
+              "delay",
+              "status_503",
+              "abort",
+              "persistent_503"
+            ],
+            "missing": [
+              "status_401",
+              "status_429",
+              "mutate"
+            ],
+            "out_of_budget": []
+          },
+          "plan": [
+            {
+              "candidate_id": "c6",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_500",
+              "label": "GET /api/fixed/stock · HTTP 500 응답",
+              "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c13",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "duplicate",
+              "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+              "reason": "중복 주문은 결제 오류 및 재고 부족으로 인해 사용자 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c15",
+              "method": "*",
+              "path": "*",
+              "fault": "slow_network",
+              "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+              "reason": "느린 네트워크는 주문 전송 지연 및 사용자 경험 저하로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c16",
+              "method": "GET",
+              "path": "*",
+              "fault": "asset_block",
+              "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+              "reason": "정적 파일 로딩 실패는 UI 표시 오류로 인해 주문 시스템 사용이 불가능해집니다."
+            },
+            {
+              "candidate_id": "c1",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "delay",
+              "label": "GET /api/fixed/stock · 3초 지연",
+              "reason": "재고 조회 지연은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c9",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "delay",
+              "label": "POST /api/fixed/orders · 3초 지연",
+              "reason": "주문 요청 지연은 사용자가 주문 버튼을 여러 번 클릭해 중복 주문으로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c7",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_503",
+              "label": "POST /api/fixed/orders · HTTP 503 응답",
+              "reason": "주문 생성 시 503 응답은 주문 처리가 중단되어 사용자 피해가 큽니다."
+            },
+            {
+              "candidate_id": "c8",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "abort",
+              "label": "POST /api/fixed/orders · 연결 끊김",
+              "reason": "연결 끊김은 주문 요청이 전송되지 않아 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c0",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "status_503",
+              "label": "GET /api/fixed/stock · HTTP 503 응답",
+              "reason": "재고 조회 시 503 응답은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+            },
+            {
+              "candidate_id": "c5",
+              "method": "GET",
+              "path": "/api/fixed/stock",
+              "fault": "persistent_503",
+              "label": "GET /api/fixed/stock · 연속 503 (12회)",
+              "reason": "연속 503 응답은 주문 시스템이 장애 상태로 전환되어 사용자 주문이 중단될 수 있습니다."
+            },
+            {
+              "candidate_id": "c14",
+              "method": "POST",
+              "path": "/api/fixed/orders",
+              "fault": "status_500",
+              "label": "POST /api/fixed/orders · HTTP 500 응답",
+              "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+            }
+          ]
+        }
+      ],
+      "usage": {
+        "calls": 2,
+        "input_tokens": 3833,
+        "output_tokens": 1043
+      },
+      "ms": 52186.91,
+      "final_plan": [
+        {
+          "candidate_id": "c7",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "status_503",
+          "label": "POST /api/fixed/orders · HTTP 503 응답",
+          "reason": "주문 생성 시 503 응답은 주문 처리가 중단되어 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c1",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "delay",
+          "label": "GET /api/fixed/stock · 3초 지연",
+          "reason": "재고 조회 지연은 사용자가 주문 전 재고 상태를 확인하지 못해 주문 실패로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c2",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_401",
+          "label": "GET /api/fixed/stock · HTTP 401 인증 만료",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c3",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_429",
+          "label": "GET /api/fixed/stock · HTTP 429 요청 제한",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c4",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "mutate",
+          "label": "GET /api/fixed/stock · 응답 형식 변경",
+          "reason": "누락 검사 후 필수 장애 유형 보완",
+          "source": "coverage_repair"
+        },
+        {
+          "candidate_id": "c5",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "persistent_503",
+          "label": "GET /api/fixed/stock · 연속 503 (12회)",
+          "reason": "연속 503 응답은 주문 시스템이 장애 상태로 전환되어 사용자 주문이 중단될 수 있습니다."
+        },
+        {
+          "candidate_id": "c6",
+          "method": "GET",
+          "path": "/api/fixed/stock",
+          "fault": "status_500",
+          "label": "GET /api/fixed/stock · HTTP 500 응답",
+          "reason": "HTTP 500 응답은 서버 내부 오류로 사용자 주문 처리가 중단될 수 있어 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c8",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "abort",
+          "label": "POST /api/fixed/orders · 연결 끊김",
+          "reason": "연결 끊김은 주문 요청이 전송되지 않아 주문 실패로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c13",
+          "method": "POST",
+          "path": "/api/fixed/orders",
+          "fault": "duplicate",
+          "label": "POST /api/fixed/orders · 응답 지연 중 두 번 클릭",
+          "reason": "중복 주문은 결제 오류 및 재고 부족으로 인해 사용자 피해가 큽니다."
+        },
+        {
+          "candidate_id": "c15",
+          "method": "*",
+          "path": "*",
+          "fault": "slow_network",
+          "label": "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)",
+          "reason": "느린 네트워크는 주문 전송 지연 및 사용자 경험 저하로 이어질 수 있습니다."
+        },
+        {
+          "candidate_id": "c16",
+          "method": "GET",
+          "path": "*",
+          "fault": "asset_block",
+          "label": "화면 전체 · 스크립트·스타일 로딩 실패",
+          "reason": "정적 파일 로딩 실패는 UI 표시 오류로 인해 주문 시스템 사용이 불가능해집니다."
+        }
+      ],
+      "coverage": {
+        "available": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "required": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "planned": [
+          "status_503",
+          "delay",
+          "status_401",
+          "status_429",
+          "mutate",
+          "persistent_503",
+          "status_500",
+          "abort",
+          "duplicate",
+          "slow_network",
+          "asset_block"
+        ],
+        "missing": [],
+        "out_of_budget": []
+      },
+      "repaired": true
+    }
+  ],
+  "scope": "Identical observed requests/references/goal/model, alternating paired order. One-pass legacy prompt vs MCP prompt+bounded replan+coverage repair. Planning coverage, not browser defect recall; combined intervention does not isolate each component.",
+  "algorithm_revision": "fault-types-only guard; before mutation-scope correction"
+}

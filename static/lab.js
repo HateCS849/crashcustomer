@@ -47,6 +47,7 @@
 
   function renderRun(run) {
     current = run;
+    window.crashEvents.watch('lab', 'lab', run, renderRun);
     const running = active(run);
     el('lab-start').disabled = busy || running;
     el('lab-start').firstElementChild.textContent = running ? '실험 진행 중…' : '실험 시작하기';
@@ -88,8 +89,8 @@
   }
   async function poll() {
     clearTimeout(timer);
-    if (!el('lab-workspace').hidden) await refresh();
-    timer = setTimeout(poll, active(current) ? 600 : 4000);
+    if (!el('lab-workspace').hidden && !window.crashEvents.connected('lab')) await refresh();
+    timer = setTimeout(poll, 4000);
   }
 
   el('lab-history').addEventListener('click', async event => {

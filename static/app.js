@@ -28,6 +28,7 @@ function renderHistory() {
 }
 function renderRun(run) {
   current = run;
+  window.crashEvents.watch('demo', 'runs', run, renderRun);
   const running = active(run);
   $('start-button').disabled = busy || running;
   $('start-button').firstElementChild.textContent = running ? '테스트 실행 중…' : '테스트 시작하기';
@@ -52,7 +53,7 @@ function renderRun(run) {
   if (run.error) {
     $('findings').innerHTML = `<div class="error-result"><strong>Agent 실행 오류 · 서비스 결함 아님</strong><br>${escapeHTML(run.error)}<br>브라우저 설치 또는 모델 연결 상태를 확인해주세요.</div>`;
   } else if (run.findings.length) {
-    $('findings').innerHTML = run.findings.map(f=>`<article class="finding"><div class="finding-head"><h3>${escapeHTML(f.title)}</h3><span class="verification ${f.verification!=='confirmed'?'unconfirmed':''}">${f.verification==='confirmed'?'독립 재현 확인':f.verification==='pending'?'재현 대기':'재현 미확인'}</span></div><p><b>기대</b> ${escapeHTML(f.expected)}<br><b>관찰</b> ${escapeHTML(f.actual)}</p><div class="evidence-links"><a href="${escapeHTML(f.before)}" target="_blank" rel="noopener">실행 전 ↗</a><a href="${escapeHTML(f.after)}" target="_blank" rel="noopener">실행 후 ↗</a>${f.replay_after?`<a href="${escapeHTML(f.replay_after)}" target="_blank" rel="noopener">재현 증거 ↗</a>`:''}<a href="/artifacts/${run.id}/explore/trace.zip">Trace ↓</a></div><details><summary>재현 동작 ${f.step}개 확인</summary><ol>${run.actions.slice(0,f.step).map(a=>`<li>${escapeHTML(a.kind)} · ${escapeHTML(a.target)}${a.value?` → ${escapeHTML(a.value)}`:''}</li>`).join('')}</ol></details></article>`).join('');
+    $('findings').innerHTML = run.findings.map(f=>`<article class="finding"><div class="finding-head"><h3>${escapeHTML(f.title)}</h3><span class="verification ${f.verification!=='confirmed'?'unconfirmed':''}">${f.verification==='confirmed'?'독립 재현 확인':f.verification==='pending'?'재현 대기':'재현 미확인'}</span></div><p><b>기대</b> ${escapeHTML(f.expected)}<br><b>관찰</b> ${escapeHTML(f.actual)}</p><div class="evidence-links"><a href="${escapeHTML(f.before)}" target="_blank" rel="noopener">실행 전 ↗</a><a href="${escapeHTML(f.after)}" target="_blank" rel="noopener">실행 후 ↗</a>${f.replay_after?`<a href="${escapeHTML(f.replay_after)}" target="_blank" rel="noopener">재현 증거 ↗</a>`:''}${run.trace_enabled === false ? '<span>인증 보호 · Trace 미저장</span>' : `<a href="/artifacts/${run.id}/explore/trace.zip">Trace ↓</a>`}</div><details><summary>재현 동작 ${f.step}개 확인</summary><ol>${run.actions.slice(0,f.step).map(a=>`<li>${escapeHTML(a.kind)} · ${escapeHTML(a.target)}${a.value?` → ${escapeHTML(a.value)}`:''}</li>`).join('')}</ol></details></article>`).join('');
   } else {
     const done = run.status==='completed';
     const text = done ? (run.result==='goal_completed'?'검사한 경로에서 신청을 완료했습니다.':'탐색을 종료했습니다. 정상 여부를 확정하지 않았습니다.') : '현재 화면을 탐색하며 계약 위반을 확인하고 있습니다.';
@@ -70,7 +71,7 @@ async function refresh() {
     if (selected) renderRun(await api(`/api/runs/${selected}`));
   } catch (error) { showError('서버 연결을 확인해주세요. ' + error.message); }
 }
-async function poll() { await refresh(); setTimeout(poll, active(current)?700:3500); }
+async function poll() { if (!window.crashEvents.connected('demo')) await refresh(); setTimeout(poll, 3500); }
 $('history').addEventListener('click', async event=>{
   const button=event.target.closest('[data-run]');
   if (button) { window.crashProjects?.selectDemo(); selected=button.dataset.run; await refresh(); }

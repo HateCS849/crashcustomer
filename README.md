@@ -4,6 +4,8 @@
 
 기존 `../all_total_vue_student`와 별개인 신규 프로젝트입니다.
 
+제출 전 기술 검증은 [평가 기준 대응·동일 입력 전후 실측](docs/SUBMISSION_READINESS.md), [실제 아키텍처](docs/ARCHITECTURE.md), [설계 결정 기록](docs/ADR.md)에 정리합니다. 결과 JSON·실행 ID·반복 횟수와 미검증 범위도 함께 보존합니다. LangSmith 실제 수신이 확인되지 않은 상태를 완료로 표시하지 않습니다.
+
 기능은 세 가지입니다.
 
 | 화면 | 하는 일 |
@@ -120,7 +122,7 @@ API: `POST/GET /api/projects`, `GET/PATCH /api/projects/{id}`, `POST /api/projec
 | 6 | 정적 파일 로딩 실패 | 같은 출처 스크립트·스타일 차단 |
 | 7 | 지속 장애 | 같은 API에 503을 12회 연속 |
 | 8 | 중복 처리 | 응답 지연 중 제출 버튼 두 번 클릭 후 서버가 몇 번 성공 처리했는지 확인 |
-| 9 | 트래픽 급증 | 조회 API·화면 주소에 동시 사용자 1→5→10→20명 단계 부하 (GET만) |
+| 9 | 트래픽 급증 | 조회 API·화면 주소에 동시 사용자 1→5→10→20명 단계 부하 (GET만, 사전 응답 검증 포함) |
 | 10 | 잘못된 입력에 500 | 관찰된 요청 본문에서 필드 누락·형식 오류·1만 자 입력을 만들어 전송 |
 
 서버 재시작·DB 장애·메모리/디스크 고갈·설정 오류·인증서 만료는 인프라 통제가 필요해 아직 재현하지 않습니다.
@@ -135,6 +137,14 @@ API: `POST/GET /api/projects`, `GET/PATCH /api/projects/{id}`, `POST /api/projec
 3. **연결 확인**으로 허용 호스트 여부와 앱 응답을 확인하고, 사용자 목표를 적은 뒤 **사전 점검 시작하기**를 누릅니다.
 
 진행 순서(LangGraph 감독 그래프):
+
+현재 흐름은 `route → recon → gate → retrieve → plan → replan_check → attack → probe → write → validate → finalize`입니다. 일반 사용 안내는 `route → chat_answer → finalize`로 분기합니다. 기준 실행의 목표가 미완료이면 `gate → write → validate → finalize`로 종료하고 장애 주입·부하를 수행하지 않습니다. 계획 누락은 기본 최대 1회 재계획하고, 여전히 누락되면 규칙으로 보충한 출처를 표시합니다. 설정한 시나리오 예산 밖의 장애 유형은 미점검으로 표시합니다.
+
+결과 상태는 `completed`(이번 범위 검증 완료), `partial`(미점검·재현 부족·측정 무효), `inconclusive`(기준 경로 미완료), `error`(실행 오류)로 구분합니다. 최종 validator는 기준선, 실제 장애 적용, 재현 근거, 점검 범위, 측정 유효성, 요약 수치 일치를 검사합니다.
+
+테스트 Bearer 토큰을 입력하면 같은 출처 브라우저와 API 측정에 적용합니다. 토큰은 실행 중 메모리에만 두고 설정·보고서에 저장하지 않으며 종료 시 제거합니다. 인증 사용 실행은 인증 헤더가 포함될 수 있는 Playwright Trace 저장을 끕니다. 화면 캡처와 관찰은 계속 저장되므로 합성 테스트 계정을 사용하세요. OAuth·CAPTCHA 자동 로그인과 쿠키 기반 세션 가져오기는 아직 지원하지 않습니다. 부하는 사전 2xx 응답을 확인하며, 관찰된 JSON API가 HTML 로그인 페이지를 반환하면 무효 처리합니다. 401/403을 정상 성능으로 집계하지 않습니다. JSON 본문의 비즈니스 의미·OpenAPI 스키마 전체 검증까지 제공하는 것은 아닙니다.
+
+아래 표는 각 단계의 역할을 설명합니다:
 
 | 단계 | 에이전트 | 내용 |
 |---|---|---|
@@ -159,7 +169,7 @@ API: `POST/GET /api/projects`, `GET/PATCH /api/projects/{id}`, `POST /api/projec
 | `auth_expiry_unhandled` | 401에 다시 로그인하라는 안내 없이 일반 오류만 표시 |
 | `broken_render` | 응답 형식이 바뀌자 `undefined`·`NaN`·`null`을 화면에 표시 |
 | `retry_storm` | 실패한 요청을 한 화면 갱신 사이에 5회 넘게 즉시 재시도 |
-| `duplicate_processing` | 한 번의 제출 동작에서 같은 변경 요청이 2번 이상 성공 처리됨 |
+| `duplicate_processing` | 같은 변경 요청에 2번 이상 2xx 응답. 실제 데이터 중복 생성은 별도 검증 필요 |
 | `asset_failure_silent` | 스크립트·스타일을 불러오지 못했는데 안내가 없음 |
 | `input_validation_500` | 잘못된 요청 본문에 4xx 대신 5xx (재전송에서도 반복) |
 | `load_slo_breach` | 단계 부하에서 오류율 5% 또는 P95 목표(기본 1초) 초과 |
@@ -174,6 +184,12 @@ API: `GET /api/projects/{id}/connection`, `POST/GET /api/projects/{id}/campaigns
 
 프로젝트 선택에서 `로컬 실험실 · 장애 전파 시뮬레이터`를 고릅니다. 로그인 사용자 수·커넥션 풀 크기·외부 응답 지연 등을 정하면, 같은 입력으로 **개선 전**(DB 커넥션을 잡은 채 외부 호출, 동기 오류 로그)과 **개선 후**(외부 호출 시간 제한, 호출 후 커넥션 획득, 제한된 비동기 로그 큐)를 실제 HTTP 요청과 SQLite 커넥션 풀로 측정합니다. API별 P95·최대 응답 시간, 풀 점유·획득 대기 초과, 로그 보존·유실을 비교하고 선택적으로 Ollama가 측정값만 근거로 가설을 제안합니다. Python 구조 재현 모델이며 Spring/Hikari 성능 측정이 아닙니다. 개선 후 로그인은 외부 호출 제한으로 빠르게 실패할 수 있어 응답 시간 목표 충족과 로그인 성공은 따로 확인해야 합니다.
 
+## 실시간 진행 기록 (SSE)
+
+`GET /api/events/{kind}/{id}` (`kind`: `runs`, `campaigns`, `lab`)가 실행 스냅샷을 SSE로 전송합니다. 프론트는 EventSource로 수신하며, 스냅샷을 교체해 타임라인 중복을 방지합니다. 이벤트 ID는 저장된 스냅샷의 해시이며 Last-Event-ID 재연결을 지원합니다. 변경이 없으면 heartbeat를 보내고 최종 상태에서 연결을 닫습니다. 목록·완료 기록 조회에는 저빈도 polling이 남아 있습니다. 단계·행동 진행 기록 스트리밍이며 Ollama의 JSON 토큰 스트리밍은 아닙니다.
+
+상단 자연어 안내는 `/api/assistant/route`로 사용 안내·프로젝트 점검·구조 실험 경로를 구분합니다. 안내만으로 테스트를 자동 시작하지 않습니다.
+
 ## MCP 서버
 
 대시보드와 같은 API를 MCP 도구로 제공합니다. CrashCustomer 서버를 띄운 상태에서, 프로젝트 폴더에서 아래 명령으로 MCP 클라이언트에 등록합니다.
@@ -184,9 +200,15 @@ claude mcp add crashcustomer -- "$(pwd)/.venv/bin/python" -m crashcustomer.mcp_s
 
 도구: `list_projects`, `check_connection`, `start_campaign`, `get_campaign`, `get_campaign_report`, `start_demo_run`, `get_run`, `start_lab_experiment`, `get_lab_report`. 다른 주소의 서버를 쓰려면 `CRASHCUSTOMER_API`를 지정합니다.
 
+### 그래프에서 실제 사용하는 MCP
+
+기존 `mcp_server.py`는 외부 클라이언트가 CrashCustomer를 제어하는 방향입니다. 별도 `mcp_context_server.py`는 그래프가 조회하는 읽기 전용 계획 서버입니다. 캠페인마다 실제 stdio MCP 세션을 열어 `qa_plan` Prompt, `crashcustomer://runbooks/{project_id}` Resource, `search_project_references`·`check_plan_coverage` Tools를 호출합니다. API 제어 서버를 다시 호출하는 재귀 구조가 아닙니다. 호출 이력은 화면·보고서에 남습니다. 첨부 내용은 참고 자료이며 실행하지 않습니다.
+
 ## LangSmith 추적
 
 `.env`에 `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`를 설정하면 탐색·사전 점검·실험실 그래프와 Ollama 호출(`explorer.decide`, `planner.plan`, `lab.ai_analysis`)이 실행 ID 메타데이터와 함께 기록됩니다. 활성화하면 목표·화면 관찰·첨부 검색 결과·모델 출력이 LangSmith로 전송되므로 합성·테스트 데이터에서만 사용하세요. 설정하지 않으면 외부로 전송하지 않습니다. 활성화 여부는 `GET /api/config`의 `tracing`에서 확인합니다.
+
+설정 여부와 실제 수신 여부는 구분합니다. `GET /api/tracing/status`는 설정·최근 수신 검증을 보여줍니다. 화면의 **합성 추적 전송·수신 검증** 또는 `POST /api/tracing/verify`는 프로젝트 데이터 없이 합성 Run을 생성·종료한 뒤 같은 ID와 출력값을 다시 조회합니다. 조회까지 일치한 경우에만 `verified`로 기록하며 결과는 `data/tracing-verification.json`에 보관합니다. 키가 없으면 `not_configured`를 반환하고 전송하지 않습니다. SDK 전송 오류만으로 실제 서비스 결함을 판정하지 않습니다. 합성 수신 검증 성공과 실제 캠페인 전체 Trace 수집 성공도 별도로 확인해야 합니다.
 
 ## 구조
 
@@ -236,7 +258,7 @@ data/           실행 중 생성. Git 제외
 
 - 등록 앱은 로컬·허용 호스트만 실행합니다. 로그인이 필요한 화면, 결제, CAPTCHA는 지원하지 않습니다.
 - 사전 점검은 첫 화면에서 시작해 버튼과 라벨이 있는 입력만 다룹니다. 링크 이동, 여러 페이지 흐름은 아직 다루지 않습니다.
-- AI 계획 모드는 장애 유형을 고르게 덮는다는 보장이 없습니다. 샘플 평가에서 규칙 기반은 11/11, AI는 9/11 유형을 재현했습니다([평가 기록](docs/EVALUATION.md)). 빠짐없이 점검하려면 규칙 기반 계획을 쓰세요.
+- 이전 AI 계획 모드는 장애 유형을 고르게 덮는다는 보장이 없었습니다. 샘플 평가에서 규칙 기반은 11/11, AI는 9/11 유형을 재현했습니다([평가 기록](docs/EVALUATION.md)). 현재는 누락 검사·제한 재계획·규칙 보완을 추가했습니다. 시나리오 예산이 유형 수보다 작거나 실제 적용에 실패하면 부분 완료로 표시합니다. 기존 평가 수치를 새 버전의 성능으로 간주하지 마세요.
 - 부하 측정은 단일 프로세스 HTTP 클라이언트의 단계 부하입니다. 쓰기 요청 부하, 분산 부하, 장시간 부하는 측정하지 않습니다.
 - `retry_storm`·`silent_failure`는 화면이 안정될 때까지(네트워크 유휴 + 진행 중 요청 종료 + 0.3초) 기다린 뒤 판정합니다. 0.5초 넘게 기다렸다가 다시 요청하는 화면은 판정 시점이 어긋날 수 있습니다.
 - 등록 앱의 서버 데이터는 실행 사이에 초기화하지 않습니다. 기준 실행과 시나리오마다 실제 주문·신청이 생성되며, 재현 결과가 서버 상태의 영향을 받을 수 있습니다.

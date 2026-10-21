@@ -1,0 +1,9 @@
+........................................................................ [ 54%]
+...........................................................              [100%]
+=============================== warnings summary ===============================
+tests/test_tracing_transport.py::test_real_sdk_creates_updates_and_reads_synthetic_run
+  /Users/changmin/workspace/skala-aimini/crashcustomer/crashcustomer/tracing.py:52: DeprecationWarning: read_run() is deprecated and will be removed after Jan 31, 2027. Use client.runs.retrieve() instead.See https://docs.langchain.com/langsmith/smithdb-sdk-migration-runs#runs-retrieve for the migration guide.
+    received = client.read_run(run_id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+131 passed, 1 warning in 4.59s

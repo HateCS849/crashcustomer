@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CrashCustomer — Browser testing lab</title><link rel="stylesheet" href="/static/styles.css"><link rel="stylesheet" href="/static/projects.css"><link rel="stylesheet" href="/static/lab.css"><script defer src="/static/app.js"></script><script defer src="/static/lab.js"></script><script defer src="/static/campaign.js"></script><script defer src="/static/projects.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CrashCustomer — Browser testing lab</title><link rel="stylesheet" href="/static/styles.css"><link rel="stylesheet" href="/static/projects.css"><link rel="stylesheet" href="/static/lab.css"><script defer src="/static/events.js"></script><script defer src="/static/app.js"></script><script defer src="/static/lab.js"></script><script defer src="/static/campaign.js"></script><script defer src="/static/projects.js"></script></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/"><span class="brand-symbol">↯</span>CrashCustomer<span class="version">BETA</span></a>
@@ -13,6 +13,11 @@
 <main>
   <header class="topbar"><span>Workspace <span class="slash">/</span> <strong>테스트실</strong></span><div class="topbar-right"><span class="status-pill"><i></i> LOCAL</span><a href="/docs" target="_blank" rel="noopener">API 문서 ↗</a></div></header>
   <section class="page-heading"><div><div class="eyebrow">LET YOUR NEXT BUG BE THE LAST SURPRISE.</div><h1>고객이 겪기 전에,<br>실패를 먼저 만나보세요<span>.</span></h1><p>목표를 주면 브라우저를 탐색하고, 실패를 다시 재현해 증거로 남깁니다.</p></div><div class="heading-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span>↯</span><small>OBSERVE<br>ACT · VERIFY</small></div></section>
+  <section class="panel" style="margin-bottom:20px;padding:20px" aria-label="요청 안내">
+    <label class="field-label" for="assistant-message">무엇을 확인할까요?</label><div style="display:flex;gap:10px"><input id="assistant-message" type="text" maxlength="1500" placeholder="사용법, 신청 페이지 점검, 커넥션 풀 장애 전파 실험" style="flex:1"><button type="button" id="assistant-route" class="small-button">경로 안내</button></div><p id="assistant-answer" role="status"></p>
+    <small id="stream-status">SSE 준비 · 실행하면 단계별 기록을 수신합니다.</small>
+    <details style="margin-top:12px"><summary>추적 연결 확인</summary><p id="tracing-status">설정 확인 중</p><button type="button" id="verify-tracing" class="small-button">합성 추적 전송·수신 검증</button><p class="field-note">이 버튼은 프로젝트 자료 없이 합성 기록만 전송합니다. 키가 설정되지 않으면 전송하지 않습니다.</p></details>
+  </section>
   <section class="project-switcher" aria-label="프로젝트 선택"><div><label for="project-select">검증할 프로젝트</label><select id="project-select"><option value="">내장 데모 · 행사 신청</option></select></div><button id="new-project-button" type="button">＋ 프로젝트 등록</button></section>
   <section id="project-workspace" hidden aria-label="프로젝트 자료">
     <div class="project-intro"><div><div class="eyebrow">PROJECT LIBRARY</div><h2 id="project-name"></h2><p id="project-description"></p><div id="project-addresses" class="project-addresses"></div></div><button id="edit-project-button" type="button" class="small-button">정보 수정</button></div>
@@ -22,6 +27,7 @@
         <form id="campaign-form" class="lab-form">
           <p class="field-note lab-intro">장애 없이 목표 경로를 한 번 수행해 화면이 호출하는 API를 찾고, 서버 오류(503·500)·인증 만료(401)·요청 제한(429)·연결 끊김·지연·응답 형식 변경·연속 실패·중복 클릭·느린 네트워크·화면 파일 실패를 주입해 같은 경로를 다시 수행합니다. 첨부 자료는 시나리오 선정 근거로만 사용합니다.</p>
           <label class="field-label" for="campaign-goal">사용자 목표</label><textarea id="campaign-goal" rows="3" minlength="5" maxlength="1500" required>화면의 주요 입력 양식을 작성해 제출하고 결과를 확인해줘.</textarea>
+          <label class="field-label spaced" for="campaign-token">테스트 Bearer 토큰 (선택)</label><input id="campaign-token" type="password" autocomplete="off" placeholder="이번 실행에서만 사용"><p class="field-note">허용된 테스트 서버에만 전달하며 저장하지 않습니다. 인증 사용 실행은 Trace 저장을 끕니다.</p>
           <label class="field-label spaced" for="campaign-backend">실행 방식</label><select id="campaign-backend"><option value="rule">규칙 기반 · 기준선 (AI 아님)</option><option value="ollama">Ollama AI · 계획·탐색 에이전트</option></select>
           <label class="field-label spaced" for="campaign-max">장애 시나리오 수 <span>유형별 1개씩 우선</span></label><select id="campaign-max"><option>4</option><option>8</option><option selected>11</option><option>16</option></select>
           <div class="check-options"><label><input type="checkbox" id="campaign-api" checked> API 입력 검증 <small>잘못된 요청 본문에 5xx가 나는지</small></label><label><input type="checkbox" id="campaign-load" checked> 단계별 부하 측정 <small>조회 API·화면 주소, GET만</small></label></div>

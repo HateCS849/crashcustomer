@@ -42,6 +42,7 @@ def invalid_variants(body: dict) -> list[tuple[str, dict]]:
 
 async def validation_probe(client: httpx.AsyncClient, requests: list[dict]) -> dict:
     results, failing, sent = [], {}, 0
+    auth_failed = False
     for request in requests:
         if request["method"] not in {"POST", "PUT", "PATCH"} or not isinstance(request.get("body"), dict):
             continue
@@ -53,14 +54,15 @@ async def validation_probe(client: httpx.AsyncClient, requests: list[dict]) -> d
                 status = (await client.request(request["method"], request["path"], json=body)).status_code
             except httpx.HTTPError as error:
                 status, label = 0, f"{label} ({type(error).__name__})"
+            auth_failed |= status in {401, 403}
             confirmed = None
-            if status >= 500:
+            if status >= 500 and sent < MAX_VALIDATION_REQUESTS:
                 sent += 1
                 try:
                     confirmed = (await client.request(request["method"], request["path"], json=body)).status_code >= 500
                 except httpx.HTTPError:
                     confirmed = True
-            results.append({"method": request["method"], "path": request["path"], "variant": label, "status": status})
+            results.append({"method": request["method"], "path": request["path"], "variant": label, "status": status, "confirmed": confirmed})
             if confirmed:
                 failing.setdefault((request["method"], request["path"]), []).append(f"{label} → {status}")
     findings = [{"code": "input_validation_500", "severity": "medium", "verification": "confirmed",
@@ -68,26 +70,56 @@ async def validation_probe(client: httpx.AsyncClient, requests: list[dict]) -> d
                  "expected": "잘못된 요청은 4xx와 이유를 돌려주고 서버 오류로 끝나면 안 됩니다.",
                  "actual": f"{method} {path}: 잘못된 입력 {len(cases)}종이 재전송에서도 5xx ({', '.join(cases[:4])}{' 외' if len(cases) > 4 else ''})"}
                 for (method, path), cases in failing.items()]
-    return {"requests": sent, "results": results, "findings": findings}
+    invalid = auth_failed or any(r["status"] == 0 or 300 <= r["status"] < 400 for r in results)
+    return {"requests": sent, "results": results, "findings": findings, "valid": not invalid,
+            "reason": "인증·연결·리디렉션 때문에 입력 검증이 무효입니다." if invalid else None,
+            "accepted_invalid": sum(200 <= r["status"] < 300 for r in results),
+            "unverified_5xx": sum(r["status"] >= 500 and r["confirmed"] is None for r in results)}
 
 
 async def load_probe(client: httpx.AsyncClient, paths: list[str], stages: list[int], slo_ms: int,
-                     requests_per_user: int = 3) -> dict:
+                     requests_per_user: int = 3, expect_json_paths: list[str] | None = None) -> dict:
     measured, breach = [], None
+    preflight = []
+    expect_json_paths = expect_json_paths or []
+    def good(response, path):
+        if not 200 <= response.status_code < 300:
+            return False
+        if path in expect_json_paths:
+            try:
+                return "json" in response.headers.get("content-type", "") and isinstance(response.json(), (dict, list))
+            except ValueError:
+                return False
+        return True
+    for path in paths:
+        try:
+            response = await client.get(path)
+            preflight.append({"path": path, "status": response.status_code, "valid": good(response, path)})
+        except httpx.HTTPError:
+            preflight.append({"path": path, "status": 0, "valid": False})
+    if not all(p["valid"] for p in preflight):
+        return {"valid": False, "reason": "사전 응답 검증 실패: 인증 또는 기대 응답을 확인해주세요.",
+                "preflight": preflight, "paths": paths, "stages": [], "slo_ms": slo_ms, "saturation_users": None, "findings": []}
+    valid = True
     for users in stages:
         durations, errors = [], 0
 
         async def user():
-            nonlocal errors
+            nonlocal errors, valid
             for index in range(requests_per_user):
                 path = paths[index % len(paths)]
                 started = time.perf_counter()
                 try:
-                    status = (await client.get(path)).status_code
+                    response = await client.get(path)
+                    status = response.status_code
+                    invalid = not good(response, path)
                 except httpx.HTTPError:
                     status = 0
+                    invalid = True
                 durations.append((time.perf_counter() - started) * 1000)
-                errors += status == 0 or status >= 500 or status == 429
+                errors += invalid
+                if status in {401, 403} or (200 <= status < 300 and invalid):
+                    valid = False
 
         started = time.perf_counter()
         await asyncio.gather(*(user() for _ in range(users)))
@@ -100,17 +132,17 @@ async def load_probe(client: httpx.AsyncClient, paths: list[str], stages: list[i
         if breach is None and (stage["error_rate"] > .05 or stage["p95_ms"] > slo_ms):
             breach = stage
     findings = []
-    if breach:
+    if breach and valid:
         findings.append({"code": "load_slo_breach", "severity": "medium", "verification": "measured",
                          "title": "동시 사용자 증가 시 응답 목표 초과",
                          "expected": f"동시 사용자 {stages[-1]}명까지 오류율 5% 이하, P95 {slo_ms}ms 이하여야 합니다.",
                          "actual": f"동시 {breach['users']}명에서 P95 {breach['p95_ms']}ms, 오류율 {breach['error_rate'] * 100:.1f}%"})
-    return {"paths": paths, "slo_ms": slo_ms, "stages": measured, "saturation_users": breach["users"] if breach else None, "findings": findings}
+    return {"valid": valid, "reason": None if valid else "측정 중 인증 또는 응답 형식 검증 실패", "preflight": preflight, "paths": paths, "slo_ms": slo_ms, "stages": measured, "saturation_users": breach["users"] if breach else None, "findings": findings}
 
 
 def load_targets(target_url: str, requests: list[dict]) -> list[str]:
     page = urlsplit(target_url).path or "/"
-    reads = [r["path"] for r in requests if r["method"] == "GET"]
+    reads = [r["path"] + ("?" + r["query"] if r.get("query") else "") for r in requests if r["method"] == "GET"]
     return list(dict.fromkeys(reads + [page]))
 
 

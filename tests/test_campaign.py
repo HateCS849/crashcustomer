@@ -229,13 +229,13 @@ def test_campaign_runs_baseline_then_planned_faults(campaign_client):
         if campaign["status"] not in {"queued", "running"}:
             break
         time.sleep(.02)
-    assert campaign["status"] == "completed", campaign.get("error")
+    assert campaign["status"] == "partial", campaign.get("error")
     assert executed[0] == [] and [rule[0]["mode"] for rule in executed[1:]] == ["status", "abort", "delay"]
     codes = {f["code"] for f in campaign["probes"]["findings"]}
     assert codes == {"input_validation_500"}
     assert [stage["users"] for stage in campaign["probes"]["load"]["stages"]] == [1, 2]
     assert campaign["probes"]["load"]["paths"] == ["/shop"]
     assert campaign["summary"]["confirmed"] == 2 and campaign["summary"]["baseline_completed"]
-    assert [e["stage"] for e in campaign["events"]][:3] == ["recon", "retrieve", "plan"]
+    assert [e["stage"] for e in campaign["events"]][:3] == ["route", "recon", "gate"]
     report = client.get(f"/api/campaigns/{campaign['id']}/report").text
     assert "실패 무응답" in report and "연결 끊김" in report and "단계별 부하" in report

@@ -1,0 +1,90 @@
+{
+  "target": "http://127.0.0.1:8721/",
+  "synthetic_only": true,
+  "cases": [
+    {
+      "authenticated": false,
+      "campaign_id": "96388326a4f34bd3a5945fcf10cec5f2",
+      "status": "inconclusive",
+      "validation": {
+        "sufficient": false,
+        "issues": [
+          "장애 없는 기준 경로의 목표 완료를 확인하지 못했습니다.",
+          "실행 가능한 장애 시나리오가 없습니다."
+        ],
+        "verdict": "inconclusive",
+        "scope": "이번 목표 경로와 선택한 장애 조건에 대한 검증이며 전체 서비스의 무결성 보증은 아닙니다."
+      },
+      "sse_updates": 15,
+      "worker_updates": 13,
+      "resume_deduplicated": true,
+      "token_not_saved": true,
+      "load": null
+    },
+    {
+      "authenticated": true,
+      "campaign_id": "2604ba20bb654e1abd9b8a102b9eecc8",
+      "status": "partial",
+      "validation": {
+        "sufficient": false,
+        "issues": [
+          "예산 내 계획 또는 전체 장애 유형 중 미점검 범위가 있습니다."
+        ],
+        "verdict": "partial",
+        "scope": "이번 목표 경로와 선택한 장애 조건에 대한 검증이며 전체 서비스의 무결성 보증은 아닙니다."
+      },
+      "sse_updates": 12,
+      "worker_updates": 10,
+      "resume_deduplicated": true,
+      "token_not_saved": true,
+      "load": {
+        "valid": true,
+        "reason": null,
+        "preflight": [
+          {
+            "path": "/private",
+            "status": 200,
+            "valid": true
+          },
+          {
+            "path": "/",
+            "status": 200,
+            "valid": true
+          }
+        ],
+        "paths": [
+          "/private",
+          "/"
+        ],
+        "slo_ms": 1000,
+        "stages": [
+          {
+            "users": 1,
+            "requests": 3,
+            "error_rate": 0.0,
+            "p50_ms": 0.5,
+            "p95_ms": 0.6,
+            "max_ms": 0.6,
+            "throughput_rps": 1865.8
+          },
+          {
+            "users": 2,
+            "requests": 6,
+            "error_rate": 0.0,
+            "p50_ms": 0.5,
+            "p95_ms": 1.3,
+            "max_ms": 1.3,
+            "throughput_rps": 2471.3
+          }
+        ],
+        "saturation_users": null
+      }
+    }
+  ],
+  "langsmith": {
+    "status": "not_configured",
+    "message": "LANGSMITH_TRACING=true 및 API 키 설정이 필요합니다. 실제 전송은 수행하지 않았습니다.",
+    "synthetic_only": true,
+    "checked_at": "2026-10-21T00:25:16.684836+00:00"
+  }
+}
