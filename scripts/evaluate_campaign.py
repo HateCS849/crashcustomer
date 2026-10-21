@@ -30,12 +30,12 @@ async def ensure_project(client, shop: str, variant: str) -> str:
     return project["id"]
 
 
-async def evaluate(base: str, shop: str, backend: str, scenarios: int, output: Path):
+async def evaluate(base: str, shop: str, backend: str, scenarios: int, output: Path, concurrency: int = 1):
     rows = []
     async with httpx.AsyncClient(base_url=base, timeout=30, trust_env=False) as client:
         for variant, expected in EXPECTED.items():
             project_id = await ensure_project(client, shop, variant)
-            response = await client.post(f"/api/projects/{project_id}/campaigns", json={"goal": GOAL, "backend": backend, "max_scenarios": scenarios})
+            response = await client.post(f"/api/projects/{project_id}/campaigns", json={"goal": GOAL, "backend": backend, "max_scenarios": scenarios, "scenario_concurrency": concurrency})
             response.raise_for_status()
             campaign_id = response.json()["id"]
             for _ in range(600):
@@ -49,11 +49,11 @@ async def evaluate(base: str, shop: str, backend: str, scenarios: int, output: P
                    "expected": sorted(expected), "confirmed": sorted(confirmed), "missed": sorted(expected - confirmed),
                    "false_positives": sorted(confirmed - expected),
                    "by_scenario": {s["label"]: sorted({f["code"] for f in s.get("findings", []) if f["verification"] == "confirmed"}) for s in campaign["scenarios"]},
-                   "summary": campaign["summary"]}
+                   "summary": campaign["summary"], "timings": campaign.get("timings"), "elapsed_seconds": campaign.get("elapsed_seconds")}
             rows.append(row)
             print(json.dumps({k: row[k] for k in ("variant", "status", "confirmed", "missed", "false_positives")}, ensure_ascii=False), flush=True)
     expected_total = sum(len(EXPECTED[r["variant"]]) for r in rows)
-    result = {"backend": backend, "max_scenarios": scenarios,
+    result = {"backend": backend, "max_scenarios": scenarios, "scenario_concurrency": concurrency,
               "recall": sum(len(set(r["confirmed"]) & EXPECTED[r["variant"]]) for r in rows) / expected_total,
               "false_positives": sum(len(r["false_positives"]) for r in rows),
               "llm_calls": sum(r["summary"]["llm_usage"]["calls"] for r in rows if r["summary"]),
@@ -71,6 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("--shop-url", default="http://127.0.0.1:8720")
     parser.add_argument("--backend", choices=["rule", "ollama"], default="rule")
     parser.add_argument("--scenarios", type=int, default=11)
+    parser.add_argument("--concurrency", type=int, default=1, help="scenarios run at the same time (server BROWSER_SLOTS also caps this)")
     parser.add_argument("--output", type=Path, default=Path("data/evaluation-campaign.json"))
     args = parser.parse_args()
-    raise SystemExit(0 if asyncio.run(evaluate(args.base_url, args.shop_url, args.backend, args.scenarios, args.output)) else 1)
+    raise SystemExit(0 if asyncio.run(evaluate(args.base_url, args.shop_url, args.backend, args.scenarios, args.output, args.concurrency)) else 1)

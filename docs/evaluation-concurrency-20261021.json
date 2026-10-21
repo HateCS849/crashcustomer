@@ -1,0 +1,988 @@
+{
+  "date": "2026-10-21",
+  "backend": "rule",
+  "target": "examples/shop_app.py buggy/fixed, 11 scenarios, API checks and load on",
+  "order": "concurrency 1,2,3,3,2,1 (alternating to reduce drift)",
+  "server": "CRASHCUSTOMER_BROWSER_SLOTS=4, LangSmith off",
+  "metric": "attack_seconds = wall time of the fault-injection node; scenario_seconds = sum of per-scenario run times",
+  "runs": [
+    {
+      "backend": "rule",
+      "max_scenarios": 11,
+      "scenario_concurrency": 1,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 0,
+      "elapsed_seconds": 143.29,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "a4107af423bc45aea74cad5f0b6e5d58",
+          "status": "partial",
+          "error": null,
+          "expected": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/buggy/orders · HTTP 503 응답": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 연결 끊김": [
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "POST /api/buggy/orders · 3초 지연": [
+              "double_submit"
+            ],
+            "POST /api/buggy/orders · HTTP 401 인증 만료": [
+              "auth_expiry_unhandled",
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · HTTP 429 요청 제한": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 응답 형식 변경": [
+              "broken_render"
+            ],
+            "GET /api/buggy/stock · 연속 503 (12회)": [
+              "retry_storm",
+              "silent_failure"
+            ],
+            "POST /api/buggy/orders · 응답 지연 중 두 번 클릭": [
+              "double_submit",
+              "duplicate_processing"
+            ],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [
+              "double_submit"
+            ],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [
+              "asset_failure_silent"
+            ],
+            "POST /api/buggy/orders · HTTP 500 응답": [
+              "input_loss"
+            ]
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 17,
+            "confirmed": 17,
+            "unique_codes": [
+              "asset_failure_silent",
+              "auth_expiry_unhandled",
+              "broken_render",
+              "double_submit",
+              "duplicate_processing",
+              "input_loss",
+              "input_validation_500",
+              "load_slo_breach",
+              "retry_storm",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 43,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 84.69
+          },
+          "timings": {
+            "scenario_concurrency": 1,
+            "attack_seconds": 81.03,
+            "scenario_seconds": 80.97
+          },
+          "elapsed_seconds": 89.64
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "1079bad256444ded864290d233f1e04b",
+          "status": "partial",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/fixed/orders · HTTP 503 응답": [],
+            "POST /api/fixed/orders · 연결 끊김": [],
+            "POST /api/fixed/orders · 3초 지연": [],
+            "POST /api/fixed/orders · HTTP 401 인증 만료": [],
+            "POST /api/fixed/orders · HTTP 429 요청 제한": [],
+            "POST /api/fixed/orders · 응답 형식 변경": [],
+            "GET /api/fixed/stock · 연속 503 (12회)": [],
+            "POST /api/fixed/orders · 응답 지연 중 두 번 클릭": [],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [],
+            "POST /api/fixed/orders · HTTP 500 응답": []
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 58.6
+          },
+          "timings": {
+            "scenario_concurrency": 1,
+            "attack_seconds": 55.31,
+            "scenario_seconds": 55.25
+          },
+          "elapsed_seconds": 59.09
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization.",
+      "file": "run1-c1.json"
+    },
+    {
+      "backend": "rule",
+      "max_scenarios": 11,
+      "scenario_concurrency": 2,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 0,
+      "elapsed_seconds": 142.44,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "9c5d981d99684fa39301ab92ce0252db",
+          "status": "partial",
+          "error": null,
+          "expected": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/buggy/orders · HTTP 503 응답": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 연결 끊김": [
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "POST /api/buggy/orders · 3초 지연": [
+              "double_submit"
+            ],
+            "POST /api/buggy/orders · HTTP 401 인증 만료": [
+              "auth_expiry_unhandled",
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · HTTP 429 요청 제한": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 응답 형식 변경": [
+              "broken_render"
+            ],
+            "GET /api/buggy/stock · 연속 503 (12회)": [
+              "retry_storm",
+              "silent_failure"
+            ],
+            "POST /api/buggy/orders · 응답 지연 중 두 번 클릭": [
+              "double_submit",
+              "duplicate_processing"
+            ],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [
+              "double_submit"
+            ],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [
+              "asset_failure_silent"
+            ],
+            "POST /api/buggy/orders · HTTP 500 응답": [
+              "input_loss"
+            ]
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 17,
+            "confirmed": 17,
+            "unique_codes": [
+              "asset_failure_silent",
+              "auth_expiry_unhandled",
+              "broken_render",
+              "double_submit",
+              "duplicate_processing",
+              "input_loss",
+              "input_validation_500",
+              "load_slo_breach",
+              "retry_storm",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 43,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 83.51
+          },
+          "timings": {
+            "scenario_concurrency": 2,
+            "attack_seconds": 42.53,
+            "scenario_seconds": 80.22
+          },
+          "elapsed_seconds": 50.66
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "8d318759e5f94d83be472e317dd65da3",
+          "status": "partial",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/fixed/orders · HTTP 503 응답": [],
+            "POST /api/fixed/orders · 연결 끊김": [],
+            "POST /api/fixed/orders · 3초 지연": [],
+            "POST /api/fixed/orders · HTTP 401 인증 만료": [],
+            "POST /api/fixed/orders · HTTP 429 요청 제한": [],
+            "POST /api/fixed/orders · 응답 형식 변경": [],
+            "GET /api/fixed/stock · 연속 503 (12회)": [],
+            "POST /api/fixed/orders · 응답 지연 중 두 번 클릭": [],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [],
+            "POST /api/fixed/orders · HTTP 500 응답": []
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 58.93
+          },
+          "timings": {
+            "scenario_concurrency": 2,
+            "attack_seconds": 28.68,
+            "scenario_seconds": 55.63
+          },
+          "elapsed_seconds": 32.43
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization.",
+      "file": "run2-c2.json"
+    },
+    {
+      "backend": "rule",
+      "max_scenarios": 11,
+      "scenario_concurrency": 3,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 0,
+      "elapsed_seconds": 150.0,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "c475858db6a8469ca9d42e71a9a6d667",
+          "status": "partial",
+          "error": null,
+          "expected": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/buggy/orders · HTTP 503 응답": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 연결 끊김": [
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "POST /api/buggy/orders · 3초 지연": [
+              "double_submit"
+            ],
+            "POST /api/buggy/orders · HTTP 401 인증 만료": [
+              "auth_expiry_unhandled",
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · HTTP 429 요청 제한": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 응답 형식 변경": [
+              "broken_render"
+            ],
+            "GET /api/buggy/stock · 연속 503 (12회)": [
+              "retry_storm",
+              "silent_failure"
+            ],
+            "POST /api/buggy/orders · 응답 지연 중 두 번 클릭": [
+              "double_submit",
+              "duplicate_processing"
+            ],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [
+              "double_submit"
+            ],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [
+              "asset_failure_silent"
+            ],
+            "POST /api/buggy/orders · HTTP 500 응답": [
+              "input_loss"
+            ]
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 17,
+            "confirmed": 17,
+            "unique_codes": [
+              "asset_failure_silent",
+              "auth_expiry_unhandled",
+              "broken_render",
+              "double_submit",
+              "duplicate_processing",
+              "input_loss",
+              "input_validation_500",
+              "load_slo_breach",
+              "retry_storm",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 43,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 87.05
+          },
+          "timings": {
+            "scenario_concurrency": 3,
+            "attack_seconds": 29.82,
+            "scenario_seconds": 83.61
+          },
+          "elapsed_seconds": 38.11
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "f9c07b9214c545b98e962b42ed815109",
+          "status": "partial",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/fixed/orders · HTTP 503 응답": [],
+            "POST /api/fixed/orders · 연결 끊김": [],
+            "POST /api/fixed/orders · 3초 지연": [],
+            "POST /api/fixed/orders · HTTP 401 인증 만료": [],
+            "POST /api/fixed/orders · HTTP 429 요청 제한": [],
+            "POST /api/fixed/orders · 응답 형식 변경": [],
+            "GET /api/fixed/stock · 연속 503 (12회)": [],
+            "POST /api/fixed/orders · 응답 지연 중 두 번 클릭": [],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [],
+            "POST /api/fixed/orders · HTTP 500 응답": []
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 62.95
+          },
+          "timings": {
+            "scenario_concurrency": 3,
+            "attack_seconds": 22.96,
+            "scenario_seconds": 59.44
+          },
+          "elapsed_seconds": 26.92
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization.",
+      "file": "run3-c3.json"
+    },
+    {
+      "backend": "rule",
+      "max_scenarios": 11,
+      "scenario_concurrency": 3,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 0,
+      "elapsed_seconds": 146.06,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "988d53dbdc114e22ab615343d4b90bc8",
+          "status": "partial",
+          "error": null,
+          "expected": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/buggy/orders · HTTP 503 응답": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 연결 끊김": [
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "POST /api/buggy/orders · 3초 지연": [
+              "double_submit"
+            ],
+            "POST /api/buggy/orders · HTTP 401 인증 만료": [
+              "auth_expiry_unhandled",
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · HTTP 429 요청 제한": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 응답 형식 변경": [
+              "broken_render"
+            ],
+            "GET /api/buggy/stock · 연속 503 (12회)": [
+              "retry_storm",
+              "silent_failure"
+            ],
+            "POST /api/buggy/orders · 응답 지연 중 두 번 클릭": [
+              "double_submit",
+              "duplicate_processing"
+            ],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [
+              "double_submit"
+            ],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [
+              "asset_failure_silent"
+            ],
+            "POST /api/buggy/orders · HTTP 500 응답": [
+              "input_loss"
+            ]
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 17,
+            "confirmed": 17,
+            "unique_codes": [
+              "asset_failure_silent",
+              "auth_expiry_unhandled",
+              "broken_render",
+              "double_submit",
+              "duplicate_processing",
+              "input_loss",
+              "input_validation_500",
+              "load_slo_breach",
+              "retry_storm",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 43,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 86.32
+          },
+          "timings": {
+            "scenario_concurrency": 3,
+            "attack_seconds": 30.07,
+            "scenario_seconds": 83.01
+          },
+          "elapsed_seconds": 38.22
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "1b0eb45356d34d9f95483daf7bb243e0",
+          "status": "partial",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/fixed/orders · HTTP 503 응답": [],
+            "POST /api/fixed/orders · 연결 끊김": [],
+            "POST /api/fixed/orders · 3초 지연": [],
+            "POST /api/fixed/orders · HTTP 401 인증 만료": [],
+            "POST /api/fixed/orders · HTTP 429 요청 제한": [],
+            "POST /api/fixed/orders · 응답 형식 변경": [],
+            "GET /api/fixed/stock · 연속 503 (12회)": [],
+            "POST /api/fixed/orders · 응답 지연 중 두 번 클릭": [],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [],
+            "POST /api/fixed/orders · HTTP 500 응답": []
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 59.74
+          },
+          "timings": {
+            "scenario_concurrency": 3,
+            "attack_seconds": 21.92,
+            "scenario_seconds": 56.47
+          },
+          "elapsed_seconds": 25.58
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization.",
+      "file": "run4-c3.json"
+    },
+    {
+      "backend": "rule",
+      "max_scenarios": 11,
+      "scenario_concurrency": 2,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 0,
+      "elapsed_seconds": 141.89,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "b5e19af167eb490b9a51f5897906455e",
+          "status": "partial",
+          "error": null,
+          "expected": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/buggy/orders · HTTP 503 응답": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 연결 끊김": [
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "POST /api/buggy/orders · 3초 지연": [
+              "double_submit"
+            ],
+            "POST /api/buggy/orders · HTTP 401 인증 만료": [
+              "auth_expiry_unhandled",
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · HTTP 429 요청 제한": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 응답 형식 변경": [
+              "broken_render"
+            ],
+            "GET /api/buggy/stock · 연속 503 (12회)": [
+              "retry_storm",
+              "silent_failure"
+            ],
+            "POST /api/buggy/orders · 응답 지연 중 두 번 클릭": [
+              "double_submit",
+              "duplicate_processing"
+            ],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [
+              "double_submit"
+            ],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [
+              "asset_failure_silent"
+            ],
+            "POST /api/buggy/orders · HTTP 500 응답": [
+              "input_loss"
+            ]
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 17,
+            "confirmed": 17,
+            "unique_codes": [
+              "asset_failure_silent",
+              "auth_expiry_unhandled",
+              "broken_render",
+              "double_submit",
+              "duplicate_processing",
+              "input_loss",
+              "input_validation_500",
+              "load_slo_breach",
+              "retry_storm",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 43,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 83.1
+          },
+          "timings": {
+            "scenario_concurrency": 2,
+            "attack_seconds": 41.94,
+            "scenario_seconds": 79.74
+          },
+          "elapsed_seconds": 50.13
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "2f1cc9b6946d4e42b0c48b5fc8c3b319",
+          "status": "partial",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/fixed/orders · HTTP 503 응답": [],
+            "POST /api/fixed/orders · 연결 끊김": [],
+            "POST /api/fixed/orders · 3초 지연": [],
+            "POST /api/fixed/orders · HTTP 401 인증 만료": [],
+            "POST /api/fixed/orders · HTTP 429 요청 제한": [],
+            "POST /api/fixed/orders · 응답 형식 변경": [],
+            "GET /api/fixed/stock · 연속 503 (12회)": [],
+            "POST /api/fixed/orders · 응답 지연 중 두 번 클릭": [],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [],
+            "POST /api/fixed/orders · HTTP 500 응답": []
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 58.79
+          },
+          "timings": {
+            "scenario_concurrency": 2,
+            "attack_seconds": 28.64,
+            "scenario_seconds": 55.52
+          },
+          "elapsed_seconds": 32.33
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization.",
+      "file": "run5-c2.json"
+    },
+    {
+      "backend": "rule",
+      "max_scenarios": 11,
+      "scenario_concurrency": 1,
+      "recall": 1.0,
+      "false_positives": 0,
+      "llm_calls": 0,
+      "elapsed_seconds": 140.49,
+      "results": [
+        {
+          "variant": "buggy",
+          "campaign_id": "866b75ea88ca429b9782a12197850ea6",
+          "status": "partial",
+          "error": null,
+          "expected": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "confirmed": [
+            "asset_failure_silent",
+            "auth_expiry_unhandled",
+            "broken_render",
+            "double_submit",
+            "duplicate_processing",
+            "input_loss",
+            "input_validation_500",
+            "load_slo_breach",
+            "retry_storm",
+            "silent_failure",
+            "unhandled_error"
+          ],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/buggy/orders · HTTP 503 응답": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 연결 끊김": [
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "POST /api/buggy/orders · 3초 지연": [
+              "double_submit"
+            ],
+            "POST /api/buggy/orders · HTTP 401 인증 만료": [
+              "auth_expiry_unhandled",
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · HTTP 429 요청 제한": [
+              "input_loss"
+            ],
+            "POST /api/buggy/orders · 응답 형식 변경": [
+              "broken_render"
+            ],
+            "GET /api/buggy/stock · 연속 503 (12회)": [
+              "retry_storm",
+              "silent_failure"
+            ],
+            "POST /api/buggy/orders · 응답 지연 중 두 번 클릭": [
+              "double_submit",
+              "duplicate_processing"
+            ],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [
+              "double_submit"
+            ],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [
+              "asset_failure_silent"
+            ],
+            "POST /api/buggy/orders · HTTP 500 응답": [
+              "input_loss"
+            ]
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 17,
+            "confirmed": 17,
+            "unique_codes": [
+              "asset_failure_silent",
+              "auth_expiry_unhandled",
+              "broken_render",
+              "double_submit",
+              "duplicate_processing",
+              "input_loss",
+              "input_validation_500",
+              "load_slo_breach",
+              "retry_storm",
+              "silent_failure",
+              "unhandled_error"
+            ],
+            "risk_score": 43,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 81.92
+          },
+          "timings": {
+            "scenario_concurrency": 1,
+            "attack_seconds": 78.69,
+            "scenario_seconds": 78.64
+          },
+          "elapsed_seconds": 86.8
+        },
+        {
+          "variant": "fixed",
+          "campaign_id": "91569eec8a004aec8e02b875e23b630b",
+          "status": "partial",
+          "error": null,
+          "expected": [],
+          "confirmed": [],
+          "missed": [],
+          "false_positives": [],
+          "by_scenario": {
+            "POST /api/fixed/orders · HTTP 503 응답": [],
+            "POST /api/fixed/orders · 연결 끊김": [],
+            "POST /api/fixed/orders · 3초 지연": [],
+            "POST /api/fixed/orders · HTTP 401 인증 만료": [],
+            "POST /api/fixed/orders · HTTP 429 요청 제한": [],
+            "POST /api/fixed/orders · 응답 형식 변경": [],
+            "GET /api/fixed/stock · 연속 503 (12회)": [],
+            "POST /api/fixed/orders · 응답 지연 중 두 번 클릭": [],
+            "화면 전체 · 느린 네트워크 (지연 800ms, 50KB/s)": [],
+            "화면 전체 · 스크립트·스타일 로딩 실패": [],
+            "POST /api/fixed/orders · HTTP 500 응답": []
+          },
+          "summary": {
+            "scenarios": 11,
+            "findings": 0,
+            "confirmed": 0,
+            "unique_codes": [],
+            "risk_score": 0,
+            "agent_errors": 0,
+            "baseline_completed": true,
+            "llm_usage": {
+              "calls": 0,
+              "input_tokens": 0,
+              "output_tokens": 0
+            },
+            "elapsed_seconds": 58.57
+          },
+          "timings": {
+            "scenario_concurrency": 1,
+            "attack_seconds": 55.28,
+            "scenario_seconds": 55.23
+          },
+          "elapsed_seconds": 59.06
+        }
+      ],
+      "scope": "Sample shop with planted defects; one campaign per variant. Not real-world generalization.",
+      "file": "run6-c1.json"
+    }
+  ]
+}

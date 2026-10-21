@@ -54,6 +54,7 @@ class CampaignRequest(BaseModel):
     goal: str = Field(default=DEFAULT_CAMPAIGN_GOAL, min_length=5, max_length=1500)
     backend: Literal["rule", "ollama"] = "rule"
     max_scenarios: int = Field(default=11, ge=1, le=16)
+    scenario_concurrency: int = Field(default=2, ge=1, le=4)
     max_steps: int = Field(default=16, ge=3, le=30)
     api_checks: bool = True
     load_test: bool = True
@@ -162,9 +163,16 @@ def summarize(campaign: dict, runs: list[dict]) -> dict:
             "llm_usage": usage, "elapsed_seconds": round(sum(run.get("elapsed_seconds") or 0 for run in runs), 2)}
 
 
+def root_cause(error: BaseException) -> BaseException:
+    """Task groups (scenario lanes, the MCP stdio context) wrap failures; report the first real error."""
+    while isinstance(error, BaseExceptionGroup) and error.exceptions:
+        error = error.exceptions[0]
+    return error
+
+
 class CampaignManager:
-    def __init__(self, store_provider, semaphore: asyncio.Semaphore, planner_factory=None, run_executor=execute_run, probe_client_factory=None, context_factory=PlanningContext):
-        self.store_provider, self.semaphore = store_provider, semaphore
+    def __init__(self, store_provider, semaphore: asyncio.Semaphore, planner_factory=None, run_executor=execute_run, probe_client_factory=None, context_factory=PlanningContext, browser_slots: int = 1):
+        self.store_provider, self.semaphore, self.browser_slots = store_provider, semaphore, browser_slots
         self.planner_factory = planner_factory or (lambda backend: OllamaPlanner() if backend == "ollama" else RulePlanner())
         self.run_executor = run_executor
         self.probe_client_factory = probe_client_factory or (lambda base: httpx.AsyncClient(base_url=base, timeout=10, trust_env=False))
@@ -292,14 +300,29 @@ class CampaignManager:
                     return {"replan": retry}
 
                 async def attack(state):
-                    for index, scenario in enumerate(campaign["scenarios"], 1):
-                        self.emit(campaign, "attack", f"[{index}/{len(campaign['scenarios'])}] {scenario['label']}")
-                        run = await self.child_run(campaign, scenario["label"], [fault_rule(scenario)])
-                        scenario.update(run_id=run["id"], status=run["status"], result=run.get("result"),
-                            findings=[{k: f.get(k) for k in ("code", "title", "severity", "verification", "expected", "actual", "before", "after")} for f in run["findings"]],
-                            injected=bool(run.get("injected")), trace_enabled=run.get("trace_enabled", True))
-                        runs.append(run)
-                        self.store.save_campaign(campaign)
+                    # Each scenario has its own browser and fault rules, so independent scenarios can run side by side.
+                    # Bounded by the campaign setting and the server-wide browser slots.
+                    scenarios = campaign["scenarios"]
+                    width = max(1, min(campaign["config"].get("scenario_concurrency", 1), self.browser_slots))
+                    lane = asyncio.Semaphore(width)
+                    started = time.monotonic()
+
+                    async def one(index, scenario):
+                        async with lane:
+                            self.emit(campaign, "attack", f"[{index}/{len(scenarios)}] {scenario['label']}")
+                            run = await self.child_run(campaign, scenario["label"], [fault_rule(scenario)])
+                            scenario.update(run_id=run["id"], status=run["status"], result=run.get("result"),
+                                findings=[{k: f.get(k) for k in ("code", "title", "severity", "verification", "expected", "actual", "before", "after")} for f in run["findings"]],
+                                injected=bool(run.get("injected")), trace_enabled=run.get("trace_enabled", True))
+                            self.store.save_campaign(campaign)
+                            return run
+
+                    async with asyncio.TaskGroup() as group:  # one failure cancels the remaining scenarios
+                        tasks = [group.create_task(one(index, scenario)) for index, scenario in enumerate(scenarios, 1)]
+                    runs.extend(task.result() for task in tasks)
+                    campaign["timings"] = {"scenario_concurrency": width, "attack_seconds": round(time.monotonic() - started, 2),
+                                           "scenario_seconds": round(sum(run.get("elapsed_seconds") or 0 for run in runs[1:]), 2)}
+                    self.store.save_campaign(campaign)
                     return state
 
                 async def probe(state):
@@ -363,6 +386,7 @@ class CampaignManager:
             campaign.update(status="interrupted", error="서버 종료로 사전 점검이 중단되었습니다.")
             raise
         except Exception as error:
+            error = root_cause(error)
             campaign.update(status="error", error=f"{type(error).__name__}: {str(error)[:1500]}")
             campaign["summary"] = summarize(campaign, runs)
             campaign["validation"] = validate_campaign(campaign, runs)

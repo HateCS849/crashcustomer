@@ -10,7 +10,7 @@ from starlette.concurrency import run_in_threadpool
 
 from .agent import execute_run, report_markdown
 from .attachments import MAX_FILE_BYTES, MAX_TEXT_BYTES, TEST_PLAN_TEMPLATE, AttachmentError, inspect_upload
-from .config import DATA_DIR, DEFAULT_BACKEND, OLLAMA_MODEL, OLLAMA_URL, ROOT
+from .config import BROWSER_SLOTS, DATA_DIR, DEFAULT_BACKEND, OLLAMA_MODEL, OLLAMA_URL, ROOT
 from .demo import render_demo
 from .models import CONTRACT, FAULTS, Applicant, ProjectRequest, RunRequest
 from .store import Store
@@ -23,9 +23,9 @@ from .routing import route_goal
 
 store = Store(DATA_DIR)
 tasks: set[asyncio.Task] = set()
-semaphore = asyncio.Semaphore(1)
+semaphore = asyncio.Semaphore(BROWSER_SLOTS)
 lab_manager = LabManager(lambda: store)
-campaign_manager = CampaignManager(lambda: store, semaphore)
+campaign_manager = CampaignManager(lambda: store, semaphore, browser_slots=BROWSER_SLOTS)
 
 
 @asynccontextmanager

@@ -10,6 +10,8 @@ BASE_URL = os.getenv("CRASHCUSTOMER_BASE_URL", "http://127.0.0.1:8710").rstrip("
 OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:8b")
 DEFAULT_BACKEND = os.getenv("CRASHCUSTOMER_BACKEND", "rule")
+# Browsers that may run at the same time across demo runs and campaign scenarios.
+BROWSER_SLOTS = max(1, min(4, int(os.getenv("CRASHCUSTOMER_BROWSER_SLOTS", "2"))))
 
 
 def browser_options() -> dict:
